@@ -1,5 +1,6 @@
-package net.kingidk.commandMaker;
+package net.kingidk.commandMaker.commands;
 
+import net.kingidk.commandMaker.CommandMaker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;

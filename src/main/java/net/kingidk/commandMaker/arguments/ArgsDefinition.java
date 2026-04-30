@@ -1,4 +1,4 @@
-package net.kingidk.commandMaker;
+package net.kingidk.commandMaker.arguments;
 
 import java.util.List;
 
