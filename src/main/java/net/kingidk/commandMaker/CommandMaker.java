@@ -3,6 +3,7 @@ package net.kingidk.commandMaker;
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
 import net.kingidk.commandMaker.commandcreation.ParseCommands;
 import net.kingidk.commandMaker.commands.AdminCommand;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
@@ -27,6 +28,11 @@ public final class CommandMaker extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // BStats
+        final int PLUGINID = 31020;
+        Metrics metrics = new Metrics(this, PLUGINID);
+
+
         var placeholderAPI = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
 
         if (placeholderAPI == null) {
