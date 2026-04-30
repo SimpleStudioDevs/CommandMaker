@@ -70,7 +70,7 @@ public final class CommandMaker extends JavaPlugin {
 
             ParseCommands cmd = new ParseCommands(cmdName, aliases, actions, this, permission, argDefs);
             commandMap.register(getName(), cmd);
-            // Force highest priority — overwrite any conflicting registration under the bare name
+            // Force custom commands to take highest priority — overwrite any conflicting registration under the bare name
             knownCommands.put(cmdName.toLowerCase(), cmd);
             for (String alias : aliases) {
                 knownCommands.put(alias.toLowerCase(), cmd);

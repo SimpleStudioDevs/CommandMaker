@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class ParseCommands extends Command {
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String @NonNull [] args) {
         if (!(permission == null)) {
             if (!sender.hasPermission(permission)) {
                 sender.sendMessage(Component.text("You do not have permission to run this command!", NamedTextColor.RED));
@@ -123,7 +124,7 @@ public class ParseCommands extends Command {
 
 
     @Override
-    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NonNull [] args) {
         int index = args.length - 1;
 
         if (index < argDefs.size()) {
