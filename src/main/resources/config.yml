@@ -1,4 +1,6 @@
 # CommandMaker Config
+# More in-depth config information and setup help
+# can be found on my wiki https://kingidk.net
 
 config:
   enabled-commands: # Add the names of every command you want to have enabled here
@@ -13,26 +15,16 @@ commands:
       - examplescommand
     actions:
       - "MESSAGE:&6&lHello! <green>This is the example!" # Send a message. Both legacy formatting & minimessage supported
-      - "CONSOLE:say Hello!" # Send console commands
+      - "CONSOLE:give {Arg1} stick 1" # Send a console command
       - "PLAYER:say Hiii" # Send commands as player
-      - "CONSOLE:give {player} {Arg2}"
     permission: "commandmaker.example" # Permission required to run the command. leave blank/remove line to disable
     args: # Arguments for the command. Can be removed if not needed for the command
       'Arg1':
         # Arguments are additional information you can add to the command. Args will be accessible as placeholders in your actions
         # This argument section is named Arg1, so the placeholder will be {Arg1}
-        # Argument options:
-        # PLAYER - Any online player. Will tab complete
-        # STRING - Can be any string
-        # INT - Any whole number
-        # FLOAT - Any Number w/ decimals
+        # Argument options: PLAYER, STRING, FLOAT, INT
         type: PLAYER
-        placeholder: true # Only for player type. If true, this player will be given to PAPI instead of the sender
-      'Arg2':
-        type: STRING
-        options: # Optional, list of strings that will be accepted for this argument
-          - "cooked_porkchop"
-          - "cooked_beef"
+
 
 
 
