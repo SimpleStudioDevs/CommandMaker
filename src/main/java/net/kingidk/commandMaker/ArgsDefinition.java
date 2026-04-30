@@ -1,4 +1,6 @@
 package net.kingidk.commandMaker;
 
-public record ArgsDefinition(String name, String type, boolean papi) {
+import java.util.List;
+
+public record ArgsDefinition(String name, String type, boolean papi, List<String> options) {
 }

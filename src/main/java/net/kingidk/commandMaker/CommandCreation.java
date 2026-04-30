@@ -59,27 +59,36 @@ public class CommandCreation extends Command {
             // Verify args
             for (int i = 0; i < argDefs.size() && i < args.length; i ++) {
                 ArgsDefinition def = argDefs.get(i);
-                String value = args[i];
+                String arg = args[i];
                 boolean valid = switch (def.type().toUpperCase()) {
-                    case "INT" -> isInteger(value);
-                    case "FLOAT" -> isFloat(value);
+                    case "INT" -> isInteger(arg);
+                    case "FLOAT" -> isFloat(arg);
+                    case "STRING" -> validString(arg, def.options());
+                    case "PLAYER" -> validPlayer(arg);
                     default -> true; // STRING and PLAYER accept anything
                 };
+
                 if (!valid) {
-                    sender.sendMessage(Component.text(
-                            "Argument '" + def.name() + "' must be a " + def.type(), NamedTextColor.RED
-                    ));
+                    switch (def.type().toUpperCase()) {
+                        case "INT" -> sender.sendMessage(Component.text(
+                                "Argument '" + def.name() + "' must be a " + def.type(), NamedTextColor.RED
+                        ));
+                        case "FLOAT" -> sender.sendMessage(Component.text(
+                                "Argument '" + def.name() + "' must be a " + def.type(), NamedTextColor.RED
+                        ));
+                        case "STRING" -> sender.sendMessage(Component.text("Invalid string argument! Options: " + def.options(), NamedTextColor.RED));
+                        case "PLAYER" -> sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
+                    }
                     return true;
                 }
 
+                // Set papi target to player argument if set in config
                 if (def.type().equalsIgnoreCase("PLAYER") && def.papi()) {
                     papiTarget = Bukkit.getPlayer(args[i]);
                 }
 
 
             }
-
-
 
 
             // Parse Placeholders
@@ -145,22 +154,24 @@ public class CommandCreation extends Command {
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
         int index = args.length - 1;
 
-        if (index < argDefs.size() && argDefs.get(index).type().equalsIgnoreCase("PLAYER")) {
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[index].toLowerCase()))
-                    .collect(Collectors.toList());
+        if (index < argDefs.size()) {
+            switch (argDefs.get(index).type().toUpperCase()) {
+                case "PLAYER" -> {
+                    return Bukkit.getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .filter(name -> name.toLowerCase().startsWith(args[index].toLowerCase()))
+                            .collect(Collectors.toList());
+                }
+                case "INT" -> { return List.of("<whole number>");}
+                case "FLOAT" -> { return List.of("<number>");}
+                case "STRING" -> { return argDefs.get(index).options();}
+            }
         }
 
-        if (index < argDefs.size() && argDefs.get(index).type().equalsIgnoreCase("INT")) {
-            return List.of("<whole number>");
-        }
-        if (index < argDefs.size() && argDefs.get(index).type().equalsIgnoreCase("FLOAT")) {
-            return List.of("<number>");
-        }
         return List.of();
     }
 
+    // Argument checks
     private boolean isInteger(String arg) {
         try {
             Integer.parseInt(arg);
@@ -178,5 +189,14 @@ public class CommandCreation extends Command {
             return false;
         }
     }
+    private boolean validString(String arg, List<String> options) {
+        return options.contains(arg);
+    }
+
+    private boolean validPlayer(String arg) {
+        return Bukkit.getOnlinePlayers().stream()
+                .anyMatch(p -> p.getName().equalsIgnoreCase(arg));
+    }
+
 
 }

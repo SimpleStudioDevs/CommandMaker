@@ -17,21 +17,22 @@ public final class CommandMaker extends JavaPlugin {
 
 
     @Override
-    public void onEnable() {
-        // Plugin startup logic
+    public void onLoad() {
         saveDefaultConfig();
+        registerCommands();
+    }
 
-         var placeholderAPI = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
+    @Override
+    public void onEnable() {
+        var placeholderAPI = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
 
-         if (placeholderAPI == null) {
+        if (placeholderAPI == null) {
             getLogger().info("PlaceholderAPI not detected, PAPI-based placeholders will be in plain-text!");
             papi = false;
         } else papi = true;
 
-
-        registerCommands();
         Objects.requireNonNull(getCommand("commandmaker")).setExecutor(new AdminCommand(this));
-        }
+    }
 
 
     @Override
@@ -47,8 +48,8 @@ public final class CommandMaker extends JavaPlugin {
 
     private void registerCommands() {
         CommandMap commandMap = Bukkit.getServer().getCommandMap();
+        Map<String, Command> knownCommands = commandMap.getKnownCommands();
         for (String cmdName : getConfig().getStringList("config.enabled-commands")) {
-            // Establish config settings for command
             List<String> aliases = getConfig().getStringList("commands." + cmdName + ".aliases");
             List<String> actions = getConfig().getStringList("commands." + cmdName + ".actions");
             String permission = getConfig().getString("commands." + cmdName + ".permission");
@@ -59,17 +60,21 @@ public final class CommandMaker extends JavaPlugin {
                 for (String argName : argsSection.getKeys(false)) {
                     String type = argsSection.getString(argName + ".type", "STRING");
                     boolean papi = argsSection.getBoolean(argName + ".placeholder", false);
-                    argDefs.add(new ArgsDefinition(argName, type, papi));
+                    List<String> options = argsSection.getStringList(argName + ".options");
+                    argDefs.add(new ArgsDefinition(argName, type, papi, options));
                 }
             }
 
-
             CommandCreation cmd = new CommandCreation(cmdName, aliases, actions, this, permission, argDefs);
             commandMap.register(getName(), cmd);
+            // Force highest priority — overwrite any conflicting registration under the bare name
+            knownCommands.put(cmdName.toLowerCase(), cmd);
+            for (String alias : aliases) {
+                knownCommands.put(alias.toLowerCase(), cmd);
+            }
             registeredCommands.add(cmd);
-    }
+        }
         getLogger().info("Successfully registered " + registeredCommands.size() + " commands to the server");
-
     }
 
 

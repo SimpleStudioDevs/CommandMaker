@@ -15,6 +15,7 @@ commands:
       - "MESSAGE:&6&lHello! <green>This is the example!" # Send a message. Both legacy formatting & minimessage supported
       - "CONSOLE:say Hello!" # Send console commands
       - "PLAYER:say Hiii" # Send commands as player
+      - "CONSOLE:give {player} {Arg2}"
     permission: "commandmaker.example" # Permission required to run the command. leave blank/remove line to disable
     args: # Arguments for the command. Can be removed if not needed for the command
       'Arg1':
@@ -27,4 +28,11 @@ commands:
         # FLOAT - Any Number w/ decimals
         type: PLAYER
         placeholder: true # Only for player type. If true, this player will be given to PAPI instead of the sender
+      'Arg2':
+        type: STRING
+        options: # Optional, list of strings that will be accepted for this argument
+          - "cooked_porkchop"
+          - "cooked_beef"
+
+
 
