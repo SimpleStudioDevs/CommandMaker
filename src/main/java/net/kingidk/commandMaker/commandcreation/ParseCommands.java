@@ -136,7 +136,10 @@ public class ParseCommands extends Command {
                 }
                 case "INT" -> { return List.of("<whole number>");}
                 case "FLOAT" -> { return List.of("<number>");}
-                case "STRING" -> { return argDefs.get(index).options();}
+                case "STRING" -> {
+                    if (argDefs.get(index).options().isEmpty()) {
+                        return List.of("<string>");
+                    } else return argDefs.get(index).options();}
             }
         }
 
