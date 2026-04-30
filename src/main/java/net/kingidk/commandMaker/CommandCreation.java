@@ -65,16 +65,17 @@ public class CommandCreation extends Command {
                     case "FLOAT" -> isFloat(arg);
                     case "STRING" -> validString(arg, def.options());
                     case "PLAYER" -> validPlayer(arg);
-                    default -> true; // STRING and PLAYER accept anything
+                    default -> true;
                 };
 
+                // Send messages if invalid args
                 if (!valid) {
                     switch (def.type().toUpperCase()) {
                         case "INT" -> sender.sendMessage(Component.text(
-                                "Argument '" + def.name() + "' must be a " + def.type(), NamedTextColor.RED
+                                "Argument '" + def.name() + "' must be an integer" , NamedTextColor.RED
                         ));
                         case "FLOAT" -> sender.sendMessage(Component.text(
-                                "Argument '" + def.name() + "' must be a " + def.type(), NamedTextColor.RED
+                                "Argument '" + def.name() + "' must be a number", NamedTextColor.RED
                         ));
                         case "STRING" -> sender.sendMessage(Component.text("Invalid string argument! Options: " + def.options(), NamedTextColor.RED));
                         case "PLAYER" -> sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
@@ -86,8 +87,6 @@ public class CommandCreation extends Command {
                 if (def.type().equalsIgnoreCase("PLAYER") && def.papi()) {
                     papiTarget = Bukkit.getPlayer(args[i]);
                 }
-
-
             }
 
 
@@ -190,7 +189,8 @@ public class CommandCreation extends Command {
         }
     }
     private boolean validString(String arg, List<String> options) {
-        return options.contains(arg);
+        if (options == null || options.isEmpty()) return true;
+        else return options.contains(arg);
     }
 
     private boolean validPlayer(String arg) {
