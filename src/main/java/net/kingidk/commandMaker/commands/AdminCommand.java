@@ -12,7 +12,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class AdminCommand implements CommandExecutor {
@@ -51,6 +53,7 @@ public class AdminCommand implements CommandExecutor {
         switch (args[0].toLowerCase()) {
             case "reload" -> reloadCommand(sender);
             case "create" -> createCommand(sender, args);
+            case "edit" -> editCommand(sender, args);
         }
 
 
@@ -81,6 +84,79 @@ public class AdminCommand implements CommandExecutor {
 
     }
 
+    public void editCommand(CommandSender sender, String[] args) {
+        // /cm edit <name> <setting>
+        //      0     1      2
 
+        switch (args.length) {
+            case 1 -> {
+                sender.sendMessage(Component.text("Please specify a command name", NamedTextColor.RED));
+                return; }
+            case 2 -> {
+                sender.sendMessage(Component.text("Please specify a setting to edit", NamedTextColor.RED));
+                return;
+            }
+            default -> {}
+        }
+
+        Configuration config =  plugin.getConfig();
+
+        String name = args[1];
+        String setting = args[2];
+
+        Set<String> possibleCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+        if  (!possibleCommands.contains(name)) {
+            sender.sendMessage(Component.text("That command does not exist!", NamedTextColor.RED));
+            return;
+        }
+
+        Set<String> possibleSettings = Set.of("action", "permission", "alias");
+        if (!possibleSettings.contains(setting)) {
+            sender.sendMessage(Component.text("That setting does not exist!", NamedTextColor.RED));
+            return;
+        }
+
+        switch (setting.toLowerCase()) {
+            case "action" -> editAction(sender, args);
+            case "permission" -> {}
+            case "alias" -> {}
+        }
+
+    }
+
+
+    public void editAction(CommandSender sender, String[] args) {
+        // /cm edit <command> action add/remove
+        //      0    1         2        3
+        Configuration config = plugin.getConfig();
+        String name = args[1];
+
+        Set<String> possibleCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+        if  (!possibleCommands.contains(name)) {
+            sender.sendMessage(Component.text("That command does not exist!", NamedTextColor.RED));
+            return;
+        }
+
+        if (!args[3].equalsIgnoreCase("add") && !args[2].equalsIgnoreCase("remove")) {
+            sender.sendMessage(Component.text("Unknown option. Specify either 'add' or 'remove'", NamedTextColor.RED));
+            return;
+        }
+
+        if (args[3].equalsIgnoreCase("add")) {
+
+            List<String> actions = config.getStringList("commands." + name + ".actions");
+
+            String action = String.join(" ", Arrays.copyOfRange(args, 4, args.length));
+            actions.add(action);
+
+            config.set("commands." + name + ".actions", actions);
+
+            plugin.saveConfig();
+            plugin.reload();
+
+        }
+
+
+    }
 
 }
