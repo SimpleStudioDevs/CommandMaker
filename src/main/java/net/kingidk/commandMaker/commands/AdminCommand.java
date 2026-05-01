@@ -1,6 +1,7 @@
 package net.kingidk.commandMaker.commands;
 
 import net.kingidk.commandMaker.CommandMaker;
+import net.kingidk.commandMaker.arguments.ArgVerification;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -78,7 +79,6 @@ public class AdminCommand implements CommandExecutor {
         if (enabledCommands.contains(args[1])) {
             enabledCommands.remove(args[1]);
             config.set("config.enabled-commands", enabledCommands);
-            plugin.saveConfig();
             plugin.reload();
 
             sender.sendMessage(Component.text("Command " + args[1] + " has been disabled", NamedTextColor.GREEN));
@@ -104,7 +104,6 @@ public class AdminCommand implements CommandExecutor {
             enabledCommands.add(args[1]);
             config.set("config.enabled-commands", enabledCommands);
 
-            plugin.saveConfig();
             plugin.reload();
 
             sender.sendMessage(Component.text("Command " + args[1] + " has been enabled", NamedTextColor.GREEN));
@@ -125,7 +124,6 @@ public class AdminCommand implements CommandExecutor {
         String commandSection = "commands." + args[1].toLowerCase();
 
         plugin.getConfig().createSection(commandSection);
-        plugin.saveConfig();
 
         plugin.reload();
         sender.sendMessage(Component.text("Added command \"" + args[1] + "\"", NamedTextColor.GREEN));
@@ -188,7 +186,9 @@ public class AdminCommand implements CommandExecutor {
             return;
         }
 
-        if (!args[3].equalsIgnoreCase("add") && !args[2].equalsIgnoreCase("remove")) {
+        List<String> validOptions = List.of("add", "remove", "list");
+
+        if (!validOptions.contains(args[3])) {
             sender.sendMessage(Component.text("Unknown option. Specify either 'add' or 'remove'", NamedTextColor.RED));
             return;
         }
@@ -221,7 +221,6 @@ public class AdminCommand implements CommandExecutor {
 
             config.set("commands." + name + ".actions", actions);
 
-            plugin.saveConfig();
             plugin.reload();
 
             sender.sendMessage(Component.text("Action '" + action + "' added to command " + name, NamedTextColor.GREEN));
@@ -229,11 +228,28 @@ public class AdminCommand implements CommandExecutor {
         }
 
         if (args[3].equalsIgnoreCase("list")) {
-            sender.sendMessage(Component.text("Actions for command " + name));
-            int i;
-            for (String s : actions) {
-                sender.sendMessage(Component.text(i + " - " + s));
-                i = i++;
+            if (actions.isEmpty()) {
+                sender.sendMessage(Component.text("There are no actions to list", NamedTextColor.YELLOW));
+                return;
+            }
+
+            sender.sendMessage(Component.text("Actions for command " + name + ":", NamedTextColor.YELLOW));
+            for (int i = 0; i < actions.size(); i++) {
+                sender.sendMessage(Component.text(i + " - " + actions.get(i)));
+            }
+        }
+
+        if (args[3].equalsIgnoreCase("remove")) {
+            if (!ArgVerification.isInteger(args[4])) {
+                sender.sendMessage(Component.text("You must write the id to the action you wish to remove. Use /cm edit <name> action list to view IDs", NamedTextColor.RED));
+            } else if (Integer.parseInt(args[4]) > actions.size()) {
+                sender.sendMessage(Component.text("This action ID does not exist. Check /cm edit <name> action list", NamedTextColor.RED));
+            } else {
+                actions.remove(Integer.parseInt(args[4]));
+                config.set("commands." + name + ".actions", actions);
+
+                plugin.reload();
+                sender.sendMessage(Component.text("Successfully removed action id " + args[4], NamedTextColor.GREEN));
             }
         }
 
@@ -245,14 +261,47 @@ public class AdminCommand implements CommandExecutor {
         //       0    1          2
 
         Configuration config = plugin.getConfig();
-        Set<String> availableCommands = config.getConfigurationSection("commands").getKeys(false);
+        Set<String> availableCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
 
         if (availableCommands.contains(args[1])) {
-            config.set("commands." + args[1] + ".permission", args[2]);
-            sender.sendMessage(Component.text("Permission " + args[2] + " set for command " + args[1]));
+
+            if (args.length < 4) {
+                config.set("commands." + args[1] + ".permission", null);
+                sender.sendMessage(Component.text("Permission has been removed from this command. Any player will be able to run it", NamedTextColor.GREEN));
+            } else {
+                config.set("commands." + args[1] + ".permission", args[3]);
+                sender.sendMessage(Component.text("Permission " + args[3] + " set for command " + args[1]));
+            }
+
+            plugin.reload();
+
+
         } else {
             sender.sendMessage(Component.text("This command does not exist!", NamedTextColor.RED));
         }
+    }
+
+    public void editAliases(CommandSender sender, String[] args) {
+        // /cm edit <name> alias add/remove/list
+        //        0     1      2         3
+
+        Configuration config = plugin.getConfig();
+        String name = args[1];
+
+        if (args[3].equalsIgnoreCase("add")) {
+
+            if (args.length < 5) {
+                sender.sendMessage(Component.text());
+            }
+
+            config.set("commands." + name + ".actions", args[4]);
+
+            plugin.reload();
+
+            sender.sendMessage(Component.text("Alias '" + args[4] + "' added to command " + name, NamedTextColor.GREEN));
+
+        }
+
     }
 
 }

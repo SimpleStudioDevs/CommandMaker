@@ -51,6 +51,7 @@ public final class CommandMaker extends JavaPlugin {
     }
     public void reload() {
         unregisterCommands();
+        saveConfig();
         reloadConfig();
         registerCommands();
     }
