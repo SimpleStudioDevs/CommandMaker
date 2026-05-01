@@ -126,8 +126,8 @@ public class AdminCommand implements CommandExecutor {
 
 
     public void editAction(CommandSender sender, String[] args) {
-        // /cm edit <command> action add/remove
-        //      0    1         2        3
+        // /cm edit <command> action add/remove <(add)actiontype>
+        //      0    1         2        3           4
         Configuration config = plugin.getConfig();
         String name = args[1];
 
@@ -144,15 +144,34 @@ public class AdminCommand implements CommandExecutor {
 
         if (args[3].equalsIgnoreCase("add")) {
 
+            Set<String> availableActions = Set.of("message", "console", "player");
+            if (!availableActions.contains(args[4])) {
+                sender.sendMessage(Component.text("Invalid action type! Options: message, console, player", NamedTextColor.RED));
+                return;
+            }
+
+
+
+            String actionPrefix = switch (args[4].toLowerCase()) {
+                case "message" -> "MESSAGE:";
+                case "console" -> "CONSOLE:";
+                case "player" -> "PLAYER:";
+                default -> null;
+            };
+
             List<String> actions = config.getStringList("commands." + name + ".actions");
 
-            String action = String.join(" ", Arrays.copyOfRange(args, 4, args.length));
+            String action = String.join(" ", Arrays.copyOfRange(args, 5, args.length));
+            action = actionPrefix + action;
+
             actions.add(action);
 
             config.set("commands." + name + ".actions", actions);
 
             plugin.saveConfig();
             plugin.reload();
+
+            sender.sendMessage(Component.text("Action '" + action + "' added to command " + name, NamedTextColor.GREEN));
 
         }
 

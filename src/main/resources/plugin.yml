@@ -9,6 +9,7 @@ commands:
   commandmaker:
     usage: /commandmaker reload
     description: Commandmaker Admin Command
+    aliases: [cm]
 
 permissions:
   commandmaker.admin:
