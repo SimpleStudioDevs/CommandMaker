@@ -8,7 +8,7 @@ folia-supported: true
 commands:
   commandmaker:
     usage: /commandmaker reload
-    description: Reload
+    description: Commandmaker Admin Command
 
 permissions:
   commandmaker.admin:
