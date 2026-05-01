@@ -12,6 +12,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.Set;
+
 public class AdminCommand implements CommandExecutor {
     private final CommandMaker plugin;
 
@@ -51,31 +54,33 @@ public class AdminCommand implements CommandExecutor {
         }
 
 
-        return false;
-    }
-
-
-    public boolean reloadCommand(CommandSender sender) {
-        plugin.reload();
-        sender.sendMessage(Component.text("CommandMaker has been reloaded!", NamedTextColor.GREEN));
         return true;
     }
 
-    public void createCommand(CommandSender sender, String[] args>) {
-        String name = args[1];
-        String type = args[2];
 
-        Configuration config = plugin.getConfig();
-        String commandSection = "commands." + args[1];
-            config.createSection(commandSection);
-            config.createSection(commandSection + ".type");
-            config.set(commandSection + ".type", args[1]);
-            if (args[2].equalsIgnoreCase("STRING")) {
-                config.createSection("")
-            }
-
-
-        sender.sendMessage(Component.text("Added command \"" + args[1] + "\""));
+    public void reloadCommand(CommandSender sender) {
+        plugin.reload();
+        sender.sendMessage(Component.text("CommandMaker has been reloaded!", NamedTextColor.GREEN));
     }
+
+    public void createCommand(CommandSender sender, String[] args) {
+        // /cm create <name>
+        if (args.length > 2) {
+            sender.sendMessage(Component.text("Too many arguments! /cm create <name>", NamedTextColor.RED));
+            return;
+        }
+
+        String commandSection = "commands." + args[1].toLowerCase();
+
+        plugin.getConfig().createSection(commandSection);
+        plugin.saveConfig();
+
+        plugin.reload();
+        sender.sendMessage(Component.text("Added command \"" + args[1] + "\"", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("Use '/cm edit " + args[1] + "' to edit the command" , NamedTextColor.GREEN));
+
+    }
+
+
 
 }
