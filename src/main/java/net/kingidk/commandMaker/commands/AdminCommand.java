@@ -54,6 +54,8 @@ public class AdminCommand implements CommandExecutor {
             case "reload" -> reloadCommand(sender);
             case "create" -> createCommand(sender, args);
             case "edit" -> editCommand(sender, args);
+            case "enable" -> enableCommand(sender, args);
+            case "disable" -> disableCommand(sender, args);
         }
 
 
@@ -64,6 +66,53 @@ public class AdminCommand implements CommandExecutor {
     public void reloadCommand(CommandSender sender) {
         plugin.reload();
         sender.sendMessage(Component.text("CommandMaker has been reloaded!", NamedTextColor.GREEN));
+    }
+
+    public void disableCommand(CommandSender sender, String[] args) {
+        // /cm disable <name>
+        //      0        1
+
+        Configuration config = plugin.getConfig();
+        List<String> enabledCommands = config.getStringList("config.enabled-commands");
+
+        if (enabledCommands.contains(args[1])) {
+            enabledCommands.remove(args[1]);
+            config.set("config.enabled-commands", enabledCommands);
+            plugin.saveConfig();
+            plugin.reload();
+
+            sender.sendMessage(Component.text("Command " + args[1] + " has been disabled", NamedTextColor.GREEN));
+        } else {
+            sender.sendMessage(Component.text("This command is not enabled or does not exist", NamedTextColor.RED));
+        }
+    }
+
+    public void enableCommand(CommandSender sender, String[] args) {
+        // /cm enable <name>
+        //      0        1
+
+        Configuration config = plugin.getConfig();
+        List<String> enabledCommands = config.getStringList("config.enabled-commands");
+        Set<String> existingCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+
+        if (enabledCommands.contains(args[1])) {
+            sender.sendMessage(Component.text("This command is already enabled!", NamedTextColor.YELLOW));
+            return;
+        }
+
+        if (existingCommands.contains(args[1])) {
+            enabledCommands.add(args[1]);
+            config.set("config.enabled-commands", enabledCommands);
+
+            plugin.saveConfig();
+            plugin.reload();
+
+            sender.sendMessage(Component.text("Command " + args[1] + " has been enabled", NamedTextColor.GREEN));
+        } else {
+            sender.sendMessage(Component.text("This command does not exist!", NamedTextColor.RED));
+        }
+
+
     }
 
     public void createCommand(CommandSender sender, String[] args) {
@@ -81,7 +130,7 @@ public class AdminCommand implements CommandExecutor {
         plugin.reload();
         sender.sendMessage(Component.text("Added command \"" + args[1] + "\"", NamedTextColor.GREEN));
         sender.sendMessage(Component.text("Use '/cm edit " + args[1] + "' to edit the command" , NamedTextColor.GREEN));
-
+        sender.sendMessage(Component.text("Use '/cm enable " + args[1] + "' to enable the command", NamedTextColor.GREEN));
     }
 
     public void editCommand(CommandSender sender, String[] args) {
@@ -118,11 +167,13 @@ public class AdminCommand implements CommandExecutor {
 
         switch (setting.toLowerCase()) {
             case "action" -> editAction(sender, args);
-            case "permission" -> {}
+            case "permission" -> editPermission(sender, args);
             case "alias" -> {}
         }
 
     }
+
+
 
 
     public void editAction(CommandSender sender, String[] args) {
@@ -142,6 +193,8 @@ public class AdminCommand implements CommandExecutor {
             return;
         }
 
+        List<String> actions = config.getStringList("commands." + name + ".actions");
+
         if (args[3].equalsIgnoreCase("add")) {
 
             Set<String> availableActions = Set.of("message", "console", "player");
@@ -159,7 +212,7 @@ public class AdminCommand implements CommandExecutor {
                 default -> null;
             };
 
-            List<String> actions = config.getStringList("commands." + name + ".actions");
+
 
             String action = String.join(" ", Arrays.copyOfRange(args, 5, args.length));
             action = actionPrefix + action;
@@ -175,7 +228,31 @@ public class AdminCommand implements CommandExecutor {
 
         }
 
+        if (args[3].equalsIgnoreCase("list")) {
+            sender.sendMessage(Component.text("Actions for command " + name));
+            int i;
+            for (String s : actions) {
+                sender.sendMessage(Component.text(i + " - " + s));
+                i = i++;
+            }
+        }
 
+
+    }
+
+    public void editPermission(CommandSender sender, String[] args) {
+        // /cm edit <name> <permission>
+        //       0    1          2
+
+        Configuration config = plugin.getConfig();
+        Set<String> availableCommands = config.getConfigurationSection("commands").getKeys(false);
+
+        if (availableCommands.contains(args[1])) {
+            config.set("commands." + args[1] + ".permission", args[2]);
+            sender.sendMessage(Component.text("Permission " + args[2] + " set for command " + args[1]));
+        } else {
+            sender.sendMessage(Component.text("This command does not exist!", NamedTextColor.RED));
+        }
     }
 
 }
