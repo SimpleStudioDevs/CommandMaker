@@ -37,7 +37,7 @@ public class AdminCommand implements CommandExecutor {
 
             TextComponent message = Component.text("CommandMaker Version 1.3.2", NamedTextColor.YELLOW, TextDecoration.BOLD)
                     .appendNewline()
-                    .append(Component.text("To reload config: /commandmaker reload", NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+                    .append(Component.text("For a list of commands, use /cm help", NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
                     .appendNewline()
                     .append(Component.text("Need help setting up, or want to make more complex commands?", NamedTextColor.AQUA))
                     .appendNewline()
@@ -55,6 +55,9 @@ public class AdminCommand implements CommandExecutor {
             case "enable" -> enableCommand(sender, args);
             case "disable" -> disableCommand(sender, args);
             case "argument" -> argumentCommand(sender, args);
+            case "help" -> helpCommand(sender);
+
+            default -> sender.sendMessage(Component.text("Unknown command!", NamedTextColor.RED));
         }
 
 
@@ -65,6 +68,29 @@ public class AdminCommand implements CommandExecutor {
     public void reloadCommand(CommandSender sender) {
         plugin.reload();
         sender.sendMessage(Component.text("CommandMaker has been reloaded!", NamedTextColor.GREEN));
+    }
+
+    public void helpCommand(CommandSender sender) {
+        sender.sendMessage(Component.text("CommandMaker Help", NamedTextColor.YELLOW, TextDecoration.UNDERLINED));
+        sender.sendMessage(Component.text("Commands:", NamedTextColor.GREEN).decoration(TextDecoration.BOLD, false));
+        sender.sendMessage(Component.text("/cm reload | Reload plugin config", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("/cm enable <command name> | Enable a command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("/cm disable <command name> | Disable a command", NamedTextColor.WHITE));
+        sender.sendMessage("");
+        sender.sendMessage(Component.text("Edit Commands:", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("/cm edit <commandName> permission <permission node> | Set a permission for a command. Leave blank to disable", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("/cm edit actions <add/list/remove> | Edit command actions", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("/cm edit aliases <add/list/remove> | Edit command aliases", NamedTextColor.WHITE));
+        sender.sendMessage("");
+        sender.sendMessage(Component.text("Argument Commands:", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("/cm argument <commandName> add <argName> <argType> [options]", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("The [options] section is only for the string argument type. Every string written after will be an option for the command. Leave blank for no options/any string", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("/cm argument <commandName> list | List arguments for a command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("/cm argument <commandName> remove <argName> | Remove an argument from the command", NamedTextColor.WHITE));
+
+
+
+
     }
 
     public void disableCommand(CommandSender sender, String[] args) {
@@ -179,6 +205,10 @@ public class AdminCommand implements CommandExecutor {
             if (type.equalsIgnoreCase("string") && args.length > 5) {
                 List<String> options = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(args, 5, args.length)));
                 config.set("commands." + name + ".args." + argName + ".options", options);
+            }
+
+            if (type.equalsIgnoreCase("player") && args.length > 5) {
+                config.set("commands." + name + ".args." + argName + ".placeholder", args[5]);
             }
 
             flushConfig();
