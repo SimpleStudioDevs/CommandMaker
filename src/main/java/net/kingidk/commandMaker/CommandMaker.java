@@ -3,10 +3,12 @@ package net.kingidk.commandMaker;
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
 import net.kingidk.commandMaker.commandcreation.ParseCommands;
 import net.kingidk.commandMaker.commands.AdminCommand;
+import net.kingidk.commandMaker.commands.TabCompletion;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -41,6 +43,7 @@ public final class CommandMaker extends JavaPlugin {
         } else papi = true;
 
         Objects.requireNonNull(getCommand("commandmaker")).setExecutor(new AdminCommand(this));
+        getCommand("commandmaker").setTabCompleter(new TabCompletion(this) {});
     }
 
 

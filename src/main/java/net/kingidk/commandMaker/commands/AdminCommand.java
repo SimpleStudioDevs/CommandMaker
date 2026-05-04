@@ -100,6 +100,11 @@ public class AdminCommand implements CommandExecutor {
         Configuration config = plugin.getConfig();
         List<String> enabledCommands = config.getStringList("config.enabled-commands");
 
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Please specify an existing command", NamedTextColor.RED));
+            return;
+        }
+
         if (enabledCommands.contains(args[1])) {
             enabledCommands.remove(args[1]);
             config.set("config.enabled-commands", enabledCommands);
@@ -118,6 +123,11 @@ public class AdminCommand implements CommandExecutor {
         Configuration config = plugin.getConfig();
         List<String> enabledCommands = config.getStringList("config.enabled-commands");
         Set<String> existingCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Please specify an existing command", NamedTextColor.RED));
+            return;
+        }
 
         if (enabledCommands.contains(args[1])) {
             sender.sendMessage(Component.text("This command is already enabled!", NamedTextColor.YELLOW));
@@ -142,6 +152,11 @@ public class AdminCommand implements CommandExecutor {
         // /cm create <name>
         if (args.length > 2) {
             sender.sendMessage(Component.text("Too many arguments! /cm create <name>", NamedTextColor.RED));
+            return;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Please a name for this command", NamedTextColor.RED));
             return;
         }
 
