@@ -64,7 +64,9 @@ public class TabCompletion implements TabCompleter {
         if (args[2].equalsIgnoreCase("add")) {
             if (args.length == 4) return List.of("<argName>");
             else if (args.length == 5) return filter(args[4], List.of("STRING", "PLAYER", "INT", "FLOAT"));
-            else return List.of("[options]");
+            else if (args[5].equalsIgnoreCase("string")) return  filter(args[5], List.of("[options]"));
+            else if (args[5].equalsIgnoreCase("player")) return filter(args[5], List.of("[boolean]"));
+            else return List.of();
         }
 
         if (args[2].equalsIgnoreCase("remove")) {
@@ -95,7 +97,7 @@ public class TabCompletion implements TabCompleter {
                 return filter(args[3], List.of("add", "list", "remove"));
             }
             if (args[3].equalsIgnoreCase("add")) {
-                if (args.length == 5) return filter(args[4], List.of("CONSOLE", "PLAYER", "MESSAGE"));
+                if (args.length == 5) return filter(args[4], List.of("console", "player", "message"));
                 if (args.length == 6) return List.of("<action>");
             }
             if (args[3].equalsIgnoreCase("remove")) {
