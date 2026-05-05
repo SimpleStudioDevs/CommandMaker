@@ -51,11 +51,13 @@ public class AdminCommand implements CommandExecutor {
         switch (args[0].toLowerCase()) {
             case "reload" -> reloadCommand(sender);
             case "create" -> createCommand(sender, args);
+            case "delete" -> deleteCommand(sender, args);
             case "edit" -> editCommand(sender, args);
             case "enable" -> enableCommand(sender, args);
             case "disable" -> disableCommand(sender, args);
             case "argument" -> argumentCommand(sender, args);
             case "help" -> helpCommand(sender);
+            case "list" -> listCommand(sender);
 
             default -> sender.sendMessage(Component.text("Unknown command!", NamedTextColor.RED));
         }
@@ -70,23 +72,36 @@ public class AdminCommand implements CommandExecutor {
         sender.sendMessage(Component.text("CommandMaker has been reloaded!", NamedTextColor.GREEN));
     }
 
+    public void listCommand(CommandSender sender) {
+        sender.sendMessage(Component.text("Custom Commands:", NamedTextColor.YELLOW, TextDecoration.BOLD));
+
+        Set<String> commands = Objects.requireNonNull(plugin.getConfig().getConfigurationSection("commands")).getKeys(false);
+        int i = 0;
+        for (String s : commands) {
+            sender.sendMessage(Component.text(" " + i + " - " + s));
+            i++;
+        }
+    }
+
     public void helpCommand(CommandSender sender) {
-        sender.sendMessage(Component.text("CommandMaker Help", NamedTextColor.YELLOW, TextDecoration.UNDERLINED));
+        sender.sendMessage(Component.text("CommandMaker Help", NamedTextColor.YELLOW, TextDecoration.UNDERLINED, TextDecoration.BOLD));
         sender.sendMessage(Component.text("Commands:", NamedTextColor.GREEN).decoration(TextDecoration.BOLD, false));
-        sender.sendMessage(Component.text("/cm reload | Reload plugin config", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("/cm enable <command name> | Enable a command", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("/cm disable <command name> | Disable a command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm reload | Reload plugin config", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm enable <command name> | Enable a command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm disable <command name> | Disable a command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm list | List all custom commands", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm delete <command> | Delete a custom command", NamedTextColor.WHITE));
         sender.sendMessage("");
-        sender.sendMessage(Component.text("Edit Commands:", NamedTextColor.GREEN));
-        sender.sendMessage(Component.text("/cm edit <commandName> permission <permission node> | Set a permission for a command. Leave blank to disable", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("/cm edit actions <add/list/remove> | Edit command actions", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("/cm edit aliases <add/list/remove> | Edit command aliases", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("Edit Commands:", NamedTextColor.GREEN, TextDecoration.BOLD));
+        sender.sendMessage(Component.text(" /cm edit <commandName> permission <permission node> | Set a permission for a command. Leave blank to disable", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm edit actions <add/list/remove> | Edit command actions", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm edit aliases <add/list/remove> | Edit command aliases", NamedTextColor.WHITE));
         sender.sendMessage("");
-        sender.sendMessage(Component.text("Argument Commands:", NamedTextColor.GREEN));
-        sender.sendMessage(Component.text("/cm argument <commandName> add <argName> <argType> [options]", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("The [options] section is only for the string argument type. Every string written after will be an option for the command. Leave blank for no options/any string", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("/cm argument <commandName> list | List arguments for a command", NamedTextColor.WHITE));
-        sender.sendMessage(Component.text("/cm argument <commandName> remove <argName> | Remove an argument from the command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("Argument Commands:", NamedTextColor.GREEN, TextDecoration.BOLD));
+        sender.sendMessage(Component.text(" /cm argument <commandName> add <argName> <argType> [options]", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text("  The [options] section is only for the string argument type. Every string written after will be an option for the command. Leave blank for no options/any string", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm argument <commandName> list | List arguments for a command", NamedTextColor.WHITE));
+        sender.sendMessage(Component.text(" /cm argument <commandName> remove <argName> | Remove an argument from the command", NamedTextColor.WHITE));
 
 
 
@@ -147,7 +162,7 @@ public class AdminCommand implements CommandExecutor {
 
 
     }
-
+    
     public void createCommand(CommandSender sender, String[] args) {
         // /cm create <name>
         if (args.length > 2) {
@@ -168,6 +183,37 @@ public class AdminCommand implements CommandExecutor {
         sender.sendMessage(Component.text("Added command \"" + args[1] + "\"", NamedTextColor.GREEN));
         sender.sendMessage(Component.text("Use '/cm edit " + args[1] + "' to edit the command" , NamedTextColor.GREEN));
         sender.sendMessage(Component.text("Use '/cm enable " + args[1] + "' to enable the command", NamedTextColor.GREEN));
+    }
+    
+    public void deleteCommand(CommandSender sender, String[] args) {
+        // /cm delete <cmdName> confirm
+        if (args.length == 1) {
+            sender.sendMessage(Component.text("Please specify a command to delete", NamedTextColor.RED));
+            return;
+        }
+
+        var commandsSection = plugin.getConfig().getConfigurationSection("commands");
+        if (commandsSection == null) {
+            sender.sendMessage(Component.text("There are no commands to delete"));
+            return;
+        }
+        Set<String> availableCommands  = commandsSection.getKeys(false);
+        String name = args[1].toLowerCase();
+        if (!availableCommands.contains(name)) {
+            sender.sendMessage(Component.text("This command does not exist"));
+            return;
+        }
+
+        if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
+            sender.sendMessage(Component.text("Are you sure you want to delete '" + name + "'? This CANNOT be undone.", NamedTextColor.RED, TextDecoration.BOLD));
+            sender.sendMessage(Component.text("If you're sure, use /cm delete " + name + " confirm", NamedTextColor.DARK_RED, TextDecoration.BOLD));
+            return;
+        }
+
+        plugin.getConfig().set("commands." + name, null);
+
+        sender.sendMessage(Component.text("Command '" + name + "' has been deleted successfully", NamedTextColor.GREEN));
+        
     }
 
     public void argumentCommand(CommandSender sender, String[] args) {
@@ -232,7 +278,12 @@ public class AdminCommand implements CommandExecutor {
         }
 
         if (args[2].equalsIgnoreCase("list")) {
-            Set<String> availableArguments = Objects.requireNonNull(config.getConfigurationSection("commands." + name + ".args")).getKeys(false);
+            var argsSection = config.getConfigurationSection("commands." + name + ".args");
+            if (argsSection == null) {
+                sender.sendMessage(Component.text("There are no arguments to list", NamedTextColor.YELLOW));
+                return;
+            }
+            Set<String> availableArguments = argsSection.getKeys(false);
             List<String> argList = new ArrayList<>(availableArguments);
             if (availableArguments.isEmpty()) {
                 sender.sendMessage(Component.text("There are no arguments to list", NamedTextColor.YELLOW));
@@ -332,6 +383,11 @@ public class AdminCommand implements CommandExecutor {
         Set<String> possibleCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
         if  (!possibleCommands.contains(name)) {
             sender.sendMessage(Component.text("That command does not exist!", NamedTextColor.RED));
+            return;
+        }
+
+        if (args.length == 3) {
+            sender.sendMessage(Component.text("You must specify an action to perform on this setting", NamedTextColor.RED));
             return;
         }
 
@@ -437,6 +493,11 @@ public class AdminCommand implements CommandExecutor {
         Configuration config = plugin.getConfig();
         String name = args[1];
         List<String> aliases = config.getStringList("commands." + name + ".aliases");
+
+        if (args.length == 3) {
+            sender.sendMessage(Component.text("You must specify an action to perform on this setting", NamedTextColor.RED));
+            return;
+        }
 
         if (args[3].equalsIgnoreCase("add")) {
 

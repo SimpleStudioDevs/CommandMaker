@@ -7,7 +7,7 @@ folia-supported: true
 
 commands:
   commandmaker:
-    usage: /commandmaker reload
+    usage: /commandmaker help
     description: Commandmaker Admin Command
     aliases: [cm]
 
