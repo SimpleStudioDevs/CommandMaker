@@ -26,7 +26,7 @@ public class TabCompletion implements TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         if (args.length == 1) {
-            return filter(args[0], List.of("disable", "argument", "help", "reload", "enable", "edit", "list", "delete"));
+            return filter(args[0], List.of("disable", "argument", "help", "reload", "enable", "edit", "list", "delete", "create"));
         }
 
         Configuration config = plugin.getConfig();
@@ -64,8 +64,8 @@ public class TabCompletion implements TabCompleter {
         if (args[2].equalsIgnoreCase("add")) {
             if (args.length == 4) return List.of("<argName>");
             else if (args.length == 5) return filter(args[4], List.of("STRING", "PLAYER", "INT", "FLOAT"));
-            else if (args[5].equalsIgnoreCase("string")) return  filter(args[5], List.of("[options]"));
-            else if (args[5].equalsIgnoreCase("player")) return filter(args[5], List.of("[boolean]"));
+            else if (args[4].equalsIgnoreCase("string")) return List.of("[options]");
+            else if (args[4].equalsIgnoreCase("player")) return List.of("[boolean]");
             else return List.of();
         }
 
