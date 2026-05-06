@@ -545,6 +545,11 @@ public class AdminCommand implements CommandExecutor {
                 }
             }
             case "remove" -> {
+                if (args.length < 5) {
+                    sender.sendMessage(Component.text("Please specify a command alias", NamedTextColor.GREEN));
+                    return;
+                }
+
                 if (!ArgVerification.isInteger(args[4])) {
                     sender.sendMessage(Component.text("You must write the id to the alias you wish to remove. Use /cm edit <name> alias list to view IDs", NamedTextColor.RED));
                 } else if (Integer.parseInt(args[4]) >= aliases.size()) {
