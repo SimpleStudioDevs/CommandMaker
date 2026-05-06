@@ -11,10 +11,7 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public final class CommandMaker extends JavaPlugin {
     private final List<ParseCommands> registeredCommands = new ArrayList<>();
@@ -103,6 +100,10 @@ public final class CommandMaker extends JavaPlugin {
         }
 
         registeredCommands.clear();
+    }
+
+    public Set<String> getCommandKeys() {
+        return Objects.requireNonNull(getConfig().getConfigurationSection("commands")).getKeys(false);
     }
 
 

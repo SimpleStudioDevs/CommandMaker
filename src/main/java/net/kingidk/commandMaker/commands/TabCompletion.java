@@ -39,7 +39,7 @@ public class TabCompletion implements TabCompleter {
             }
             case "enable", "delete" -> {
                 if (args.length == 2) {
-                    Set<String> keys = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+                    Set<String> keys = plugin.getCommandKeys();
                     return filter(args[1], keys);
                 }
             }
@@ -52,9 +52,9 @@ public class TabCompletion implements TabCompleter {
 
 
     private List<String> argumentComplete(String[] args, Configuration config) {
-        if (args.length <= 2) {
-            Set<String> keys = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
-            return filter(args[args.length - 1], keys);
+        if (args.length == 2) {
+            Set<String> keys = plugin.getCommandKeys();
+            return filter(args[1], keys);
         }
 
         if (args.length == 3) {
@@ -80,7 +80,7 @@ public class TabCompletion implements TabCompleter {
 
     private List<String> editComplete(String[] args, Configuration config) {
         if (args.length == 2) {
-            Set<String> keys = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+            Set<String> keys = plugin.getCommandKeys();
             return filter(args[1], keys);
         }
 

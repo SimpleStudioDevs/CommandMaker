@@ -77,7 +77,7 @@ public class AdminCommand implements CommandExecutor {
     public void listCommand(CommandSender sender) {
         sender.sendMessage(Component.text("Custom Commands:", NamedTextColor.YELLOW, TextDecoration.BOLD));
 
-        Set<String> commands = Objects.requireNonNull(plugin.getConfig().getConfigurationSection("commands")).getKeys(false);
+        Set<String> commands = plugin.getCommandKeys();
         int i = 0;
         for (String s : commands) {
             sender.sendMessage(Component.text(" " + i + " - " + s));
@@ -127,7 +127,7 @@ public class AdminCommand implements CommandExecutor {
         if (enabledCommands.contains(args[1])) {
             enabledCommands.remove(args[1]);
             config.set("config.enabled-commands", enabledCommands);
-            flushConfig();
+            saveAndReload();
 
             sender.sendMessage(Component.text("Command " + args[1] + " has been disabled", NamedTextColor.GREEN));
         } else {
@@ -142,7 +142,7 @@ public class AdminCommand implements CommandExecutor {
 
         Configuration config = plugin.getConfig();
         List<String> enabledCommands = config.getStringList("config.enabled-commands");
-        Set<String> existingCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+        Set<String> existingCommands = plugin.getCommandKeys();
 
         if (args.length < 2) {
             sender.sendMessage(Component.text("Please specify an existing command", NamedTextColor.RED));
@@ -158,7 +158,7 @@ public class AdminCommand implements CommandExecutor {
             enabledCommands.add(args[1]);
             config.set("config.enabled-commands", enabledCommands);
 
-            flushConfig();
+            saveAndReload();
 
             sender.sendMessage(Component.text("Command " + args[1] + " has been enabled", NamedTextColor.GREEN));
         } else {
@@ -181,11 +181,17 @@ public class AdminCommand implements CommandExecutor {
             return;
         }
 
+
         String commandSection = "commands." + args[1].toLowerCase();
+
+        if (plugin.getConfig().getConfigurationSection(commandSection) != null) {
+            sender.sendMessage(Component.text("This command already exists! Please use '/cm delete <commandName>' first to remove this command", NamedTextColor.RED));
+            return;
+        }
 
         plugin.getConfig().createSection(commandSection);
 
-        flushConfig();
+        saveAndReload();
         sender.sendMessage(Component.text("Added command \"" + args[1] + "\"", NamedTextColor.GREEN));
         sender.sendMessage(Component.text("Use '/cm edit " + args[1] + "' to edit the command" , NamedTextColor.GREEN));
         sender.sendMessage(Component.text("Use '/cm enable " + args[1] + "' to enable the command", NamedTextColor.GREEN));
@@ -221,7 +227,7 @@ public class AdminCommand implements CommandExecutor {
         List<String> enabledCommands = plugin.getConfig().getStringList("config.enabled-commands");
         enabledCommands.remove(name);
         plugin.getConfig().set("config.enabled-commands", enabledCommands);
-        flushConfig();
+        saveAndReload();
 
         sender.sendMessage(Component.text("Command '" + name + "' has been deleted successfully", NamedTextColor.GREEN));
         
@@ -260,7 +266,7 @@ public class AdminCommand implements CommandExecutor {
             return;
         }
 
-        Set<String> availableCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+        Set<String> availableCommands = plugin.getCommandKeys();
 
         if (!availableCommands.contains(args[1])) {
             sender.sendMessage(Component.text("This command does not exist!", NamedTextColor.RED));
@@ -269,89 +275,77 @@ public class AdminCommand implements CommandExecutor {
 
         String name = args[1].toLowerCase();
 
+        switch (args[2].toLowerCase()) {
+            case "add" -> {
+                Set<String> availableOptions = Set.of("string", "player", "int", "float");
+                if (args.length < 5 || !availableOptions.contains(args[4].toLowerCase())) {
+                    sender.sendMessage(Component.text("Please specify a valid argument type. Options: string, player, int, float", NamedTextColor.RED));
+                    return;
+                }
 
-        // /cm argument <name> add <argName> <argType> [options]
-        if (args[2].equalsIgnoreCase("add")) {
-            Set<String> availableOptions = Set.of("string", "player", "int", "float");
-            if (args.length < 5 || !availableOptions.contains(args[4].toLowerCase())) {
-                sender.sendMessage(Component.text("Please specify a valid argument type. Options: string, player, int, float", NamedTextColor.RED));
-                return;
+                String type = args[4];
+                String argName = args[3];
+
+
+                config.set("commands." + name + ".args." + argName + ".type", type);
+                if (type.equalsIgnoreCase("string") && args.length > 5) {
+                    List<String> options = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(args, 5, args.length)));
+                    config.set("commands." + name + ".args." + argName + ".options", options);
+                }
+
+                if (type.equalsIgnoreCase("player") && args.length > 5) {
+                    config.set("commands." + name + ".args." + argName + ".placeholder", args[5]);
+                }
+
+                saveAndReload();
+                sender.sendMessage(Component.text("Argument " + argName + " added to command " + name, NamedTextColor.GREEN));
+
             }
-            
-            String type = args[4];
-            String argName = args[3];
+            case "list" -> {
+                var argsSection = config.getConfigurationSection("commands." + name + ".args");
+                if (argsSection == null) {
+                    sender.sendMessage(Component.text("There are no arguments to list", NamedTextColor.YELLOW));
+                    return;
+                }
+                Set<String> availableArguments = argsSection.getKeys(false);
+                List<String> argList = new ArrayList<>(availableArguments);
+                if (availableArguments.isEmpty()) {
+                    sender.sendMessage(Component.text("There are no arguments to list", NamedTextColor.YELLOW));
+                    return;
+                }
 
+                sender.sendMessage(Component.text("Arguments for command " + name + ":", NamedTextColor.YELLOW));
+                for (int i = 0; i < argList.size(); i++) {
+                    sender.sendMessage(Component.text(i + " - " + argList.get(i)));
 
-            config.set("commands." + name + ".args." + argName + ".type", type);
-            if (type.equalsIgnoreCase("string") && args.length > 5) {
-                List<String> options = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(args, 5, args.length)));
-                config.set("commands." + name + ".args." + argName + ".options", options);
-            }
+                    if (Objects.requireNonNull(config.getString("commands." + name + ".args." + argList.get(i) + ".type")).equalsIgnoreCase("string")) {
+                        List<String> options = config.getStringList("commands." + name + ".args." + argList.get(i) + ".options");
+                        if (!options.isEmpty()) {
+                            sender.sendMessage(Component.text("  Options:", NamedTextColor.YELLOW));
+                            for (String option : options) {
+                                sender.sendMessage(Component.text("    - " + option));
+                            }
 
-            if (type.equalsIgnoreCase("player") && args.length > 5) {
-                config.set("commands." + name + ".args." + argName + ".placeholder", args[5]);
-            }
-
-            flushConfig();
-            sender.sendMessage(Component.text("Argument " + argName + " added to command " + name, NamedTextColor.GREEN));
-
-        }
-
-        // /cm argument <name> list
-        if (args[2].equalsIgnoreCase("list")) {
-            var argsSection = config.getConfigurationSection("commands." + name + ".args");
-            if (argsSection == null) {
-                sender.sendMessage(Component.text("There are no arguments to list", NamedTextColor.YELLOW));
-                return;
-            }
-            Set<String> availableArguments = argsSection.getKeys(false);
-            List<String> argList = new ArrayList<>(availableArguments);
-            if (availableArguments.isEmpty()) {
-                sender.sendMessage(Component.text("There are no arguments to list", NamedTextColor.YELLOW));
-                return;
-            }
-
-            sender.sendMessage(Component.text("Arguments for command " + name + ":", NamedTextColor.YELLOW));
-            for (int i = 0; i < argList.size(); i++) {
-                sender.sendMessage(Component.text(i + " - " + argList.get(i)));
-
-                if (Objects.requireNonNull(config.getString("commands." + name + ".args." + argList.get(i) + ".type")).equalsIgnoreCase("string")) {
-                    List<String> options = config.getStringList("commands." + name + ".args." + argList.get(i) + ".options");
-                    if (!options.isEmpty()) {
-                        sender.sendMessage(Component.text("  Options:", NamedTextColor.YELLOW));
-                        for (String option : options) {
-                            sender.sendMessage(Component.text("    - " + option));
-                    }
-
+                        }
                     }
                 }
             }
-        }
+            case "remove" -> {
 
-        if (args[2].equalsIgnoreCase("remove")) {
-            // /cm argument <cmdName> remove <argName>
-            //        0         1       2       3
+                String argName = args[3].toLowerCase();
 
+                Set<String> availableArgNames = Objects.requireNonNull(config.getConfigurationSection("commands." + name + ".args")).getKeys(false);
+                if (!availableArgNames.contains(argName)) {
+                    sender.sendMessage(Component.text("This argument does not exist. Use /cm argument <name> list to view options", NamedTextColor.RED));
+                    return;
+                }
 
-            if (!availableCommands.contains(args[1])) {
-                sender.sendMessage(Component.text("This command does not exist!", NamedTextColor.RED));
-                return;
+                config.set("commands." + name + ".args." + argName, null);
+                saveAndReload();
+                sender.sendMessage(Component.text("Argument '" + argName + "' has been removed from command '" + name + "'"));
+
             }
-
-            String argName = args[3].toLowerCase();
-
-            Set<String> availableArgNames = Objects.requireNonNull(config.getConfigurationSection("commands." + name + ".args")).getKeys(false);
-            if (!availableArgNames.contains(argName)) {
-                sender.sendMessage(Component.text("This argument does not exist. Use /cm agument <name> list to view options", NamedTextColor.RED));
-                return;
-            }
-
-            config.set("commands." + name + ".args." + argName, null);
-            flushConfig();
-            sender.sendMessage(Component.text("Argument '" + argName + "' has been removed from command '" + name + "'"));
         }
-
-
 
     }
 
@@ -376,7 +370,7 @@ public class AdminCommand implements CommandExecutor {
         String name = args[1];
         String setting = args[2];
 
-        Set<String> possibleCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+        Set<String> possibleCommands = plugin.getCommandKeys();
         if  (!possibleCommands.contains(name)) {
             sender.sendMessage(Component.text("That command does not exist!", NamedTextColor.RED));
             return;
@@ -403,12 +397,6 @@ public class AdminCommand implements CommandExecutor {
         Configuration config = plugin.getConfig();
         String name = args[1];
 
-        Set<String> possibleCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
-        if  (!possibleCommands.contains(name)) {
-            sender.sendMessage(Component.text("That command does not exist!", NamedTextColor.RED));
-            return;
-        }
-
         if (args.length == 3) {
             sender.sendMessage(Component.text("You must specify an action to perform on this setting", NamedTextColor.RED));
             return;
@@ -423,61 +411,61 @@ public class AdminCommand implements CommandExecutor {
 
         List<String> actions = config.getStringList("commands." + name + ".actions");
 
-        if (args[3].equalsIgnoreCase("add")) {
-
-            Set<String> availableActions = Set.of("message", "console", "player");
-            if (!availableActions.contains(args[4].toLowerCase())) {
-                sender.sendMessage(Component.text("Invalid action type! Options: player, console, player", NamedTextColor.RED));
+        switch (args[3].toLowerCase()) {
+            case "add" -> {
+                if (args.length < 5) {
+                sender.sendMessage(Component.text("Please select an action to use on this command. Options: player, console, player", NamedTextColor.RED));
                 return;
             }
+                Set<String> availableActions = Set.of("message", "console", "player");
+                if (!availableActions.contains(args[4].toLowerCase())) {
+                    sender.sendMessage(Component.text("Invalid action type! Options: player, console, player", NamedTextColor.RED));
+                    return;
+                }
+
+                String actionPrefix = switch (args[4].toLowerCase()) {
+                    case "message" -> "MESSAGE:";
+                    case "console" -> "CONSOLE:";
+                    case "player" -> "PLAYER:";
+                    default -> throw new AssertionError();
+                };
 
 
 
-            String actionPrefix = switch (args[4].toLowerCase()) {
-                case "message" -> "MESSAGE:";
-                case "console" -> "CONSOLE:";
-                case "player" -> "PLAYER:";
-                default -> null;
-            };
+                String action = String.join(" ", Arrays.copyOfRange(args, 5, args.length));
+                action = actionPrefix + action;
 
+                actions.add(action);
 
-
-            String action = String.join(" ", Arrays.copyOfRange(args, 5, args.length));
-            action = actionPrefix + action;
-
-            actions.add(action);
-
-            config.set("commands." + name + ".actions", actions);
-
-            flushConfig();
-
-            sender.sendMessage(Component.text("Action '" + action + "' added to command " + name, NamedTextColor.GREEN));
-
-        }
-
-        if (args[3].equalsIgnoreCase("list")) {
-            if (actions.isEmpty()) {
-                sender.sendMessage(Component.text("There are no actions to list", NamedTextColor.YELLOW));
-                return;
-            }
-
-            sender.sendMessage(Component.text("Actions for command " + name + ":", NamedTextColor.YELLOW));
-            for (int i = 0; i < actions.size(); i++) {
-                sender.sendMessage(Component.text(i + " - " + actions.get(i)));
-            }
-        }
-
-        if (args[3].equalsIgnoreCase("remove")) {
-            if (!ArgVerification.isInteger(args[4])) {
-                sender.sendMessage(Component.text("You must write the id to the action you wish to remove. Use /cm edit <name> action list to view IDs", NamedTextColor.RED));
-            } else if (Integer.parseInt(args[4]) > actions.size()) {
-                sender.sendMessage(Component.text("This action ID does not exist. Check /cm edit <name> action list", NamedTextColor.RED));
-            } else {
-                actions.remove(Integer.parseInt(args[4]));
                 config.set("commands." + name + ".actions", actions);
 
-                flushConfig();
-                sender.sendMessage(Component.text("Successfully removed action id " + args[4], NamedTextColor.GREEN));
+                saveAndReload();
+
+                sender.sendMessage(Component.text("Action '" + action + "' added to command " + name, NamedTextColor.GREEN));
+            }
+            case "list" -> {
+                if (actions.isEmpty()) {
+                    sender.sendMessage(Component.text("There are no actions to list", NamedTextColor.YELLOW));
+                    return;
+                }
+
+                sender.sendMessage(Component.text("Actions for command " + name + ":", NamedTextColor.YELLOW));
+                for (int i = 0; i < actions.size(); i++) {
+                    sender.sendMessage(Component.text(i + " - " + actions.get(i)));
+                }
+            }
+            case "remove" -> {
+                if (!ArgVerification.isInteger(args[4])) {
+                    sender.sendMessage(Component.text("You must write the id to the action you wish to remove. Use /cm edit <name> action list to view IDs", NamedTextColor.RED));
+                } else if (Integer.parseInt(args[4]) >= actions.size()) {
+                    sender.sendMessage(Component.text("This action ID does not exist. Check /cm edit <name> action list", NamedTextColor.RED));
+                } else {
+                    actions.remove(Integer.parseInt(args[4]));
+                    config.set("commands." + name + ".actions", actions);
+
+                    saveAndReload();
+                    sender.sendMessage(Component.text("Successfully removed action id " + args[4], NamedTextColor.GREEN));
+                }
             }
         }
 
@@ -489,24 +477,26 @@ public class AdminCommand implements CommandExecutor {
         //       0    1          2
 
         Configuration config = plugin.getConfig();
-        Set<String> availableCommands = Objects.requireNonNull(config.getConfigurationSection("commands")).getKeys(false);
+        Set<String> availableCommands = plugin.getCommandKeys();
 
-        if (availableCommands.contains(args[1])) {
-
-            if (args.length < 4) {
-                config.set("commands." + args[1] + ".permission", null);
-                sender.sendMessage(Component.text("Permission has been removed from this command. Any player will be able to run it", NamedTextColor.GREEN));
-            } else {
-                config.set("commands." + args[1] + ".permission", args[3]);
-                sender.sendMessage(Component.text("Permission " + args[3] + " set for command " + args[1], NamedTextColor.GREEN));
-            }
-
-            flushConfig();
-
-
-        } else {
+        if (!availableCommands.contains(args[1])) {
             sender.sendMessage(Component.text("This command does not exist!", NamedTextColor.RED));
+            return;
         }
+
+
+        if (args.length < 4) {
+            config.set("commands." + args[1] + ".permission", null);
+            sender.sendMessage(Component.text("Permission has been removed from this command. Any player will be able to run it", NamedTextColor.GREEN));
+        } else {
+            config.set("commands." + args[1] + ".permission", args[3]);
+            sender.sendMessage(Component.text("Permission " + args[3] + " set for command " + args[1], NamedTextColor.GREEN));
+        }
+
+        saveAndReload();
+
+
+
     }
 
     public void editAliases(CommandSender sender, String[] args) {
@@ -529,50 +519,49 @@ public class AdminCommand implements CommandExecutor {
             return;
         }
 
-        if (args[3].equalsIgnoreCase("add")) {
+        switch (args[3].toLowerCase()) {
+            case "add" -> {
+                if (args.length < 5) {
+                    sender.sendMessage(Component.text("Please specify a command alias", NamedTextColor.GREEN));
+                    return;
+                }
 
-            if (args.length < 5) {
-                sender.sendMessage(Component.text("Please specify a command alias", NamedTextColor.GREEN));
-                return;
-            }
+                aliases.add(args[4].toLowerCase());
 
-            aliases.add(args[4].toLowerCase());
-
-            config.set("commands." + name + ".aliases", aliases);
-            flushConfig();
-            sender.sendMessage(Component.text("Alias '" + args[4] + "' added to command " + name, NamedTextColor.GREEN));
-
-        }
-        if (args[3].equalsIgnoreCase("list")) {
-
-            if (aliases.isEmpty()) {
-                sender.sendMessage(Component.text("There are no actions to list", NamedTextColor.YELLOW));
-                return;
-            }
-
-            sender.sendMessage(Component.text("Aliases for command " + name + ":", NamedTextColor.YELLOW));
-            for (int i = 0; i < aliases.size(); i++) {
-                sender.sendMessage(Component.text(i + " - " + aliases.get(i)));
-            }
-        }
-
-        if (args[3].equalsIgnoreCase("remove")) {
-            if (!ArgVerification.isInteger(args[4])) {
-                sender.sendMessage(Component.text("You must write the id to the alias you wish to remove. Use /cm edit <name> alias list to view IDs", NamedTextColor.RED));
-            } else if (Integer.parseInt(args[4]) > aliases.size()) {
-                sender.sendMessage(Component.text("This alias ID does not exist. Check /cm edit <name> alias list", NamedTextColor.RED));
-            } else {
-                aliases.remove(Integer.parseInt(args[4]));
                 config.set("commands." + name + ".aliases", aliases);
+                saveAndReload();
+                sender.sendMessage(Component.text("Alias '" + args[4] + "' added to command " + name, NamedTextColor.GREEN));
 
-                flushConfig();
-                sender.sendMessage(Component.text("Successfully removed alias id " + args[4], NamedTextColor.GREEN));
+            }
+            case "list" -> {
+                if (aliases.isEmpty()) {
+                    sender.sendMessage(Component.text("There are no actions to list", NamedTextColor.YELLOW));
+                    return;
+                }
 
+                sender.sendMessage(Component.text("Aliases for command " + name + ":", NamedTextColor.YELLOW));
+                for (int i = 0; i < aliases.size(); i++) {
+                    sender.sendMessage(Component.text(i + " - " + aliases.get(i)));
+                }
+            }
+            case "remove" -> {
+                if (!ArgVerification.isInteger(args[4])) {
+                    sender.sendMessage(Component.text("You must write the id to the alias you wish to remove. Use /cm edit <name> alias list to view IDs", NamedTextColor.RED));
+                } else if (Integer.parseInt(args[4]) >= aliases.size()) {
+                    sender.sendMessage(Component.text("This alias ID does not exist. Check /cm edit <name> alias list", NamedTextColor.RED));
+                } else {
+                    aliases.remove(Integer.parseInt(args[4]));
+                    config.set("commands." + name + ".aliases", aliases);
+
+                    saveAndReload();
+                    sender.sendMessage(Component.text("Successfully removed alias id " + args[4], NamedTextColor.GREEN));
+
+                }
             }
         }
     }
 
-    public void flushConfig() {
+    public void saveAndReload() {
         plugin.saveConfig();
         plugin.reload();
     }
