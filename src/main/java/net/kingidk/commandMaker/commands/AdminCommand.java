@@ -425,9 +425,9 @@ public class AdminCommand implements CommandExecutor {
 
         if (args[3].equalsIgnoreCase("add")) {
 
-            Set<String> availableActions = Set.of("message", "console", "player");
+            Set<String> availableActions = Set.of("message", "console", "player", "broadcast");
             if (!availableActions.contains(args[4].toLowerCase())) {
-                sender.sendMessage(Component.text("Invalid action type! Options: player, console, player", NamedTextColor.RED));
+                sender.sendMessage(Component.text("Invalid action type! Options: player, console, player, broadcast", NamedTextColor.RED));
                 return;
             }
 
@@ -435,6 +435,7 @@ public class AdminCommand implements CommandExecutor {
 
             String actionPrefix = switch (args[4].toLowerCase()) {
                 case "message" -> "MESSAGE:";
+                case "broadcast" -> "BROADCAST:";
                 case "console" -> "CONSOLE:";
                 case "player" -> "PLAYER:";
                 default -> null;

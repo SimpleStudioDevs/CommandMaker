@@ -111,7 +111,8 @@ public class ParseCommands extends Command {
 
             // Send action out to methods
             switch (prefix) {
-                case "MESSAGE:" -> executeCommands.sendMessage(sender, action);
+                case "MESSAGE:" -> executeCommands.sendMessage(sender, action, false);
+                case "BROADCAST:" -> executeCommands.sendMessage(sender, action, true);
                 case "CONSOLE:" -> executeCommands.runCommand(sender, action, true);
                 case "PLAYER:" -> executeCommands.runCommand(sender, action, false);
                 default -> plugin.getLogger().warning("Incorrectly formatted action! Failed to parse: " + string);

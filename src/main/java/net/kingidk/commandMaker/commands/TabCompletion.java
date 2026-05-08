@@ -97,7 +97,7 @@ public class TabCompletion implements TabCompleter {
                 return filter(args[3], List.of("add", "list", "remove"));
             }
             if (args[3].equalsIgnoreCase("add")) {
-                if (args.length == 5) return filter(args[4], List.of("console", "player", "message"));
+                if (args.length == 5) return filter(args[4], List.of("console", "player", "message", "broadcast"));
                 if (args.length == 6) return List.of("<action>");
             }
             if (args[3].equalsIgnoreCase("remove")) {
