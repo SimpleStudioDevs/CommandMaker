@@ -9,7 +9,7 @@
 config:
   enabled-commands:
     - examplecommand
-  update-notifications: true # Do you want those with commandmaker.admin to see when an update is available?
+  update-notification: true # Do you want those with commandmaker.admin to see when an update is available?
 
 
 commands:
@@ -26,6 +26,8 @@ commands:
       'Arg1':
         type: PLAYER
 
+# DO NOT TOUCH
+version: 1
 
 
 
