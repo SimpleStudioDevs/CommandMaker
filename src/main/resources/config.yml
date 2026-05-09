@@ -3,12 +3,13 @@
 # can be found on my wiki https://kingidk.net
 
 # Most of this can be easily edited through commands in-game.
-# if you wish to edit it manually, you still can though! Theres a section
+# if you wish to edit it manually, you still can though! There's a section
 # in the wiki about it
 
 config:
   enabled-commands:
     - examplecommand
+  update-notifications: true # Do you want those with commandmaker.admin to see when an update is available?
 
 
 commands:
