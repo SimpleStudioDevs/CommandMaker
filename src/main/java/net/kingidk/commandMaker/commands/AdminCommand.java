@@ -444,6 +444,12 @@ public class AdminCommand implements CommandExecutor {
 
 
             String action = String.join(" ", Arrays.copyOfRange(args, 5, args.length));
+            if (action.isBlank()) {
+                if (actionPrefix.equals("CONSOLE:") || actionPrefix.equals("PLAYER:")) {
+                    sender.sendMessage(Component.text("Command actions MUST have text. Please include the command to run", NamedTextColor.RED));
+                    return;
+                }
+            }
             action = actionPrefix + action;
 
             actions.add(action);
