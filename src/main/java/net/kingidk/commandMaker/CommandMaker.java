@@ -30,6 +30,11 @@ public final class CommandMaker extends JavaPlugin {
         final int PLUGINID = 31020;
         new Metrics(this, PLUGINID);
 
+        // Update Notifier
+        UpdateNotifier updateNotifier = new UpdateNotifier(this);
+        updateNotifier.checkUpdate();
+        getServer().getPluginManager().registerEvents(updateNotifier, this);
+
 
         var placeholderAPI = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
 

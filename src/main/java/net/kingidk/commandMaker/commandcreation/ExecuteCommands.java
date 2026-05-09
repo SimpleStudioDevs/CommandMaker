@@ -14,9 +14,15 @@ public class ExecuteCommands {
         this.plugin = plugin;
     }
 
-    public void sendMessage(CommandSender sender, String action) {
+    public void sendMessage(CommandSender sender, String action, boolean broadcast) {
         Component component = MiniMessage.miniMessage().deserialize(convertLegacyToMiniMessage(action));
-        sender.sendMessage(component);
+        if (broadcast) {
+            for (Player p :  Bukkit.getOnlinePlayers()) {
+                p.sendMessage(component);
+            }
+        } else {
+            sender.sendMessage(component);
+        }
     }
 
     public void runCommand(CommandSender sender, String command, boolean isConsole) {
