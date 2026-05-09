@@ -36,7 +36,7 @@ public class AdminCommand implements CommandExecutor {
                     .decoration(TextDecoration.UNDERLINED, true)
                     .clickEvent(ClickEvent.openUrl("https://kingidk.net"));
 
-            TextComponent message = Component.text("CommandMaker Version 1.3.2", NamedTextColor.YELLOW, TextDecoration.BOLD)
+            TextComponent message = Component.text("CommandMaker", NamedTextColor.YELLOW, TextDecoration.BOLD)
                     .appendNewline()
                     .append(Component.text("For a list of commands, use /cm help", NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
                     .appendNewline()
