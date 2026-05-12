@@ -180,6 +180,11 @@ public class AdminCommand implements CommandExecutor {
             sender.sendMessage(Component.text("Please a name for this command", NamedTextColor.RED));
             return;
         }
+        Set<String> existingCommands = Objects.requireNonNull(plugin.getConfig().getConfigurationSection("commands")).getKeys(false);
+        if (existingCommands.contains(args[1])) {
+            sender.sendMessage(Component.text("This command already exists!", NamedTextColor.RED));
+            return;
+        }
 
         String commandSection = "commands." + args[1].toLowerCase();
 
