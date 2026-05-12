@@ -35,6 +35,13 @@ public final class CommandMaker extends JavaPlugin {
         updateNotifier.checkUpdate();
         getServer().getPluginManager().registerEvents(updateNotifier, this);
 
+        // Update config | Move to its own check later if more config options are added
+        if (!getConfig().isSet("version")) {
+            getConfig().set("version", "1");
+            getConfig().set("config.update-notification", true);
+            saveConfig();
+        }
+
 
         var placeholderAPI = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
 

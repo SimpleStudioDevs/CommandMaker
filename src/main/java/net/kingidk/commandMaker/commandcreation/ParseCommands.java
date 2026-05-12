@@ -56,10 +56,10 @@ public class ParseCommands extends Command {
             String prefix = string.substring(0, colonIndex + 1);
             String action = string.substring(colonIndex + 1).trim();
 
-            Player papiTarget;
+            Player placeholderTarget;
             if (sender instanceof Player p) {
-                papiTarget = p;
-            } else papiTarget = null;
+                placeholderTarget = p;
+            } else placeholderTarget = null;
 
             // Verify args
             for (int i = 0; i < argDefs.size() && i < args.length; i ++) {
@@ -90,7 +90,7 @@ public class ParseCommands extends Command {
 
                 // Set papi target to player argument if set in config
                 if (def.type().equalsIgnoreCase("PLAYER") && def.papi()) {
-                    papiTarget = Bukkit.getPlayer(args[i]);
+                    placeholderTarget = Bukkit.getPlayer(args[i]);
                 }
             }
 
@@ -101,12 +101,30 @@ public class ParseCommands extends Command {
                 action = action.replace("{" + argDefs.get(i).name() + "}", args[i]);
             }
 
-            // Player & PAPI
+            // Server
+            String onlinePlayers = String.valueOf(plugin.getServer().getOnlinePlayers().size());
+            String maxPlayers = String.valueOf(plugin.getServer().getMaxPlayers());
+
+            action = action.replace("{onlineplayers}", onlinePlayers);
+            action = action.replace("{maxplayers}", maxPlayers);
+
             if (sender instanceof Player p) {
                 action = action.replace("{player}", p.getName());
+            } else {
+                action = action.replace("{player}", "Console");
+            }
+
+            // Placeholders for player argument
+            if (placeholderTarget != null) {
+                action = action.replace("{target}", placeholderTarget.getName());
+                action = action.replace("{x}", String.valueOf(placeholderTarget.getX()));
+                action = action.replace("{y}", String.valueOf(placeholderTarget.getY()));
+                action = action.replace("{z}", String.valueOf(placeholderTarget.getZ()));
+                action = action.replace("{world}", placeholderTarget.getWorld().getName());
+                action = action.replace("{displayname}", placeholderTarget.displayName().toString());
             }
             if (plugin.papi) {
-                action = PlaceholderAPI.setPlaceholders(papiTarget, action);
+                action = PlaceholderAPI.setPlaceholders(placeholderTarget, action);
             }
 
             // Send action out to methods

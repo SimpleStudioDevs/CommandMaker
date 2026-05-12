@@ -59,6 +59,8 @@ public class UpdateNotifier implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
+        if (!plugin.getConfig().getBoolean("config.update-notification")) return;
+
         if (!isUpdateAvailable()) return;
         plugin.getServer().getGlobalRegionScheduler().runDelayed(plugin, task ->
             updateMessage(e.getPlayer()), 20L
