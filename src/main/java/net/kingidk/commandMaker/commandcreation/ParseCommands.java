@@ -110,16 +110,18 @@ public class ParseCommands extends Command {
 
             if (sender instanceof Player p) {
                 action = action.replace("{player}", p.getName());
+                action = action.replace("{sender}", p.getName());
             } else {
-                action = action.replace("{player}", "Console");
+                action = action.replace("{sender}", "Console");
+                action = action.replace("{sender}", "Console");
             }
 
             // Placeholders for player argument
             if (placeholderTarget != null) {
                 action = action.replace("{target}", placeholderTarget.getName());
-                action = action.replace("{x}", String.valueOf(placeholderTarget.getX()));
-                action = action.replace("{y}", String.valueOf(placeholderTarget.getY()));
-                action = action.replace("{z}", String.valueOf(placeholderTarget.getZ()));
+                action = action.replace("{x}", String.format("%.2f", placeholderTarget.getX()));
+                action = action.replace("{y}", String.format("%.2f", placeholderTarget.getY()));
+                action = action.replace("{z}", String.format("%.2f", placeholderTarget.getZ()));
                 action = action.replace("{world}", placeholderTarget.getWorld().getName());
                 action = action.replace("{displayname}", placeholderTarget.displayName().toString());
             }
