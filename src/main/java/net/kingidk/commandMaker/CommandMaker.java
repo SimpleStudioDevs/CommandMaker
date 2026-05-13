@@ -9,12 +9,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
 public final class CommandMaker extends JavaPlugin {
     private final List<ParseCommands> registeredCommands = new ArrayList<>();
+    private final List<Permission> registeredPermissions = new ArrayList<>();
     public boolean papi;
 
 
@@ -86,6 +88,21 @@ public final class CommandMaker extends JavaPlugin {
             }
 
             ParseCommands cmd = new ParseCommands(cmdName, aliases, actions, this, permission, argDefs);
+
+            // Register permissions on the fly
+            if (permission != null) {
+                Permission testPerm = Bukkit.getPluginManager().getPermission(permission);
+                if (testPerm == null) {
+                    Permission newPerm = new Permission(permission, "Permission for custom command " + cmdName);
+                    if (!registeredPermissions.contains(newPerm)) {
+                        Bukkit.getPluginManager().addPermission(newPerm);
+                        Bukkit.getPluginManager().recalculatePermissionDefaults(newPerm);
+                        registeredPermissions.add(newPerm);
+                    }
+                }
+
+            }
+
             commandMap.register(getName(), cmd);
             // Force custom commands to take highest priority — overwrite any conflicting registration under the bare name
             knownCommands.put(cmdName.toLowerCase(), cmd);
@@ -110,7 +127,10 @@ public final class CommandMaker extends JavaPlugin {
                 knownCommands.remove(getName() + ":" + alias);
             }
         }
-
+        for (Permission p : registeredPermissions) {
+            Bukkit.getPluginManager().removePermission(p);
+        }
+        registeredPermissions.clear();
         registeredCommands.clear();
     }
 
