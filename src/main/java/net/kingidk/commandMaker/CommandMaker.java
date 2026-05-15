@@ -72,6 +72,8 @@ public final class CommandMaker extends JavaPlugin {
         CommandMap commandMap = Bukkit.getServer().getCommandMap();
         Map<String, Command> knownCommands = commandMap.getKnownCommands();
         for (String cmdName : getConfig().getStringList("config.enabled-commands")) {
+            // Define command information and details
+
             List<String> aliases = getConfig().getStringList("commands." + cmdName + ".aliases");
             List<String> actions = getConfig().getStringList("commands." + cmdName + ".actions");
             String permission = getConfig().getString("commands." + cmdName + ".permission");
@@ -80,6 +82,7 @@ public final class CommandMaker extends JavaPlugin {
             List<ArgsDefinition> argDefs = new ArrayList<>();
             if (argsSection != null) {
                 for (String argName : argsSection.getKeys(false)) {
+                    // Define argument information, add each to argDefs array
                     String type = argsSection.getString(argName + ".type", "STRING");
                     boolean papi = argsSection.getBoolean(argName + ".placeholder", false);
                     List<String> options = argsSection.getStringList(argName + ".options");
@@ -87,8 +90,10 @@ public final class CommandMaker extends JavaPlugin {
                 }
             }
 
+            // Register built command to the server
             CustomCommand cmd = new CustomCommand(cmdName, aliases, actions, this, permission, argDefs);
             commandMap.register(getName(), cmd);
+
             // Force custom commands to take highest priority — overwrite any conflicting registration under the bare name
             knownCommands.put(cmdName.toLowerCase(), cmd);
             for (String alias : aliases) {
