@@ -1,5 +1,5 @@
 name: CommandMaker
-version: '1.4.1'
+version: '${version}'
 main: net.kingidk.commandMaker.CommandMaker
 api-version: '1.21'
 authors: [ Kingidk ]
