@@ -16,21 +16,21 @@ import org.jspecify.annotations.NonNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ParseCommands extends Command {
+public class CustomCommand extends Command {
     private final List<String> actions;
     private final CommandMaker plugin;
     private final String permission;
     private final List<ArgsDefinition> argDefs;
-    private final ExecuteCommands executeCommands;
+    private final ExecuteActions executeCommands;
 
-    public ParseCommands(String name, List<String> aliases, List<String> actions, CommandMaker plugin, String permission, List<ArgsDefinition> argDefs) {
+    public CustomCommand(String name, List<String> aliases, List<String> actions, CommandMaker plugin, String permission, List<ArgsDefinition> argDefs) {
         super(name);
         this.plugin = plugin;
         setAliases(aliases);
         this.actions = actions;
         this.permission = permission;
         this.argDefs = argDefs;
-        this.executeCommands = new ExecuteCommands(plugin);
+        this.executeCommands = new ExecuteActions(plugin);
     }
 
     @Override

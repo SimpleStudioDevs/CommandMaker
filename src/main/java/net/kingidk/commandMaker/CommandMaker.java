@@ -1,7 +1,7 @@
 package net.kingidk.commandMaker;
 
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
-import net.kingidk.commandMaker.commandcreation.ParseCommands;
+import net.kingidk.commandMaker.commandcreation.CustomCommand;
 import net.kingidk.commandMaker.commands.AdminCommand;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -13,7 +13,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.*;
 
 public final class CommandMaker extends JavaPlugin {
-    private final List<ParseCommands> registeredCommands = new ArrayList<>();
+    private final List<CustomCommand> registeredCommands = new ArrayList<>();
     public boolean papi;
     public static CommandMaker instance;
 
@@ -87,7 +87,7 @@ public final class CommandMaker extends JavaPlugin {
                 }
             }
 
-            ParseCommands cmd = new ParseCommands(cmdName, aliases, actions, this, permission, argDefs);
+            CustomCommand cmd = new CustomCommand(cmdName, aliases, actions, this, permission, argDefs);
             commandMap.register(getName(), cmd);
             // Force custom commands to take highest priority — overwrite any conflicting registration under the bare name
             knownCommands.put(cmdName.toLowerCase(), cmd);
@@ -103,7 +103,7 @@ public final class CommandMaker extends JavaPlugin {
     private void unregisterCommands() {
         CommandMap commandMap = Bukkit.getServer().getCommandMap();
         Map<String, Command> knownCommands = commandMap.getKnownCommands();
-        for (ParseCommands cmd : registeredCommands) {
+        for (CustomCommand cmd : registeredCommands) {
             cmd.unregister(commandMap);
             knownCommands.remove(cmd.getName());
             knownCommands.remove(getName() + ":" + cmd.getName());
