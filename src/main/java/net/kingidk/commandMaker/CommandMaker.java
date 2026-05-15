@@ -3,7 +3,6 @@ package net.kingidk.commandMaker;
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
 import net.kingidk.commandMaker.commandcreation.ParseCommands;
 import net.kingidk.commandMaker.commands.AdminCommand;
-import net.kingidk.commandMaker.commands.TabCompletion;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -16,6 +15,7 @@ import java.util.*;
 public final class CommandMaker extends JavaPlugin {
     private final List<ParseCommands> registeredCommands = new ArrayList<>();
     public boolean papi;
+    public static CommandMaker instance;
 
 
     @Override
@@ -26,6 +26,7 @@ public final class CommandMaker extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
         // BStats
         final int PLUGINID = 31020;
         new Metrics(this, PLUGINID);
@@ -51,7 +52,7 @@ public final class CommandMaker extends JavaPlugin {
         } else papi = true;
 
         Objects.requireNonNull(getCommand("commandmaker")).setExecutor(new AdminCommand(this));
-        Objects.requireNonNull(getCommand("commandmaker")).setTabCompleter(new TabCompletion(this) {});
+        Objects.requireNonNull(getCommand("commandmaker")).setTabCompleter(new AdminCommand(this) {});
     }
 
 
@@ -62,6 +63,7 @@ public final class CommandMaker extends JavaPlugin {
     }
     public void reload() {
         unregisterCommands();
+        saveConfig();
         reloadConfig();
         registerCommands();
     }
@@ -117,6 +119,7 @@ public final class CommandMaker extends JavaPlugin {
     public Set<String> getCommandKeys() {
         return Objects.requireNonNull(getConfig().getConfigurationSection("commands")).getKeys(false);
     }
+
 
 
 }
