@@ -1,23 +1,25 @@
 package net.kingidk.commandMaker;
 
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
-import net.kingidk.commandMaker.commandcreation.ParseCommands;
+import net.kingidk.commandMaker.commandcreation.CustomCommand;
 import net.kingidk.commandMaker.commands.AdminCommand;
-import net.kingidk.commandMaker.commands.TabCompletion;
+import net.kingidk.commandMaker.conditions.ConditionsDefinition;
+import net.milkbowl.vault.economy.Economy;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.permissions.Permission;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
 public final class CommandMaker extends JavaPlugin {
-    private final List<ParseCommands> registeredCommands = new ArrayList<>();
-    private final List<Permission> registeredPermissions = new ArrayList<>();
+    private final List<CustomCommand> registeredCommands = new ArrayList<>();
     public boolean papi;
+    public boolean vault;
+    public static Economy econ = null;
 
 
     @Override
@@ -52,8 +54,15 @@ public final class CommandMaker extends JavaPlugin {
             papi = false;
         } else papi = true;
 
+        var vaultPlugin = Bukkit.getPluginManager().getPlugin("Vault");
+
+        if (vaultPlugin == null) {
+            getLogger().info("Vault not detected, {balance} placeholder will be unavailable");
+            vault = false;
+        } else vault = true;
+
         Objects.requireNonNull(getCommand("commandmaker")).setExecutor(new AdminCommand(this));
-        Objects.requireNonNull(getCommand("commandmaker")).setTabCompleter(new TabCompletion(this) {});
+        Objects.requireNonNull(getCommand("commandmaker")).setTabCompleter(new AdminCommand(this) {});
     }
 
 
@@ -64,6 +73,7 @@ public final class CommandMaker extends JavaPlugin {
     }
     public void reload() {
         unregisterCommands();
+        saveConfig();
         reloadConfig();
         registerCommands();
     }
@@ -72,6 +82,8 @@ public final class CommandMaker extends JavaPlugin {
         CommandMap commandMap = Bukkit.getServer().getCommandMap();
         Map<String, Command> knownCommands = commandMap.getKnownCommands();
         for (String cmdName : getConfig().getStringList("config.enabled-commands")) {
+            // Define command information and details
+
             List<String> aliases = getConfig().getStringList("commands." + cmdName + ".aliases");
             List<String> actions = getConfig().getStringList("commands." + cmdName + ".actions");
             String permission = getConfig().getString("commands." + cmdName + ".permission");
@@ -80,6 +92,7 @@ public final class CommandMaker extends JavaPlugin {
             List<ArgsDefinition> argDefs = new ArrayList<>();
             if (argsSection != null) {
                 for (String argName : argsSection.getKeys(false)) {
+                    // Define argument information, add each to argDefs array
                     String type = argsSection.getString(argName + ".type", "STRING");
                     boolean papi = argsSection.getBoolean(argName + ".placeholder", false);
                     List<String> options = argsSection.getStringList(argName + ".options");
@@ -87,23 +100,23 @@ public final class CommandMaker extends JavaPlugin {
                 }
             }
 
-            ParseCommands cmd = new ParseCommands(cmdName, aliases, actions, this, permission, argDefs);
-
-            // Register permissions on the fly
-            if (permission != null) {
-                Permission testPerm = Bukkit.getPluginManager().getPermission(permission);
-                if (testPerm == null) {
-                    Permission newPerm = new Permission(permission, "Permission for custom command " + cmdName);
-                    if (!registeredPermissions.contains(newPerm)) {
-                        Bukkit.getPluginManager().addPermission(newPerm);
-                        Bukkit.getPluginManager().recalculatePermissionDefaults(newPerm);
-                        registeredPermissions.add(newPerm);
-                    }
+            ConfigurationSection conditionsSection = getConfig().getConfigurationSection("commands." + cmdName + ".conditions");
+            List<ConditionsDefinition> conditionDefs = new ArrayList<>();
+            if (conditionsSection != null) {
+                for (String conditionName : conditionsSection.getKeys(false)) {
+                    String variable =  conditionsSection.getString(conditionName + ".variable");
+                    double min = conditionsSection.getDouble(conditionName + ".min");
+                    double max = conditionsSection.getDouble(conditionName + ".max");
+                    String message = conditionsSection.getString(conditionName + ".message");
+                    conditionDefs.add(new ConditionsDefinition(variable, min, max, message));
                 }
-
             }
 
+
+            // Register built command to the server
+            CustomCommand cmd = new CustomCommand(cmdName, aliases, actions, this, permission, argDefs, conditionDefs);
             commandMap.register(getName(), cmd);
+
             // Force custom commands to take highest priority — overwrite any conflicting registration under the bare name
             knownCommands.put(cmdName.toLowerCase(), cmd);
             for (String alias : aliases) {
@@ -118,7 +131,7 @@ public final class CommandMaker extends JavaPlugin {
     private void unregisterCommands() {
         CommandMap commandMap = Bukkit.getServer().getCommandMap();
         Map<String, Command> knownCommands = commandMap.getKnownCommands();
-        for (ParseCommands cmd : registeredCommands) {
+        for (CustomCommand cmd : registeredCommands) {
             cmd.unregister(commandMap);
             knownCommands.remove(cmd.getName());
             knownCommands.remove(getName() + ":" + cmd.getName());
@@ -127,16 +140,34 @@ public final class CommandMaker extends JavaPlugin {
                 knownCommands.remove(getName() + ":" + alias);
             }
         }
-        for (Permission p : registeredPermissions) {
-            Bukkit.getPluginManager().removePermission(p);
-        }
-        registeredPermissions.clear();
+
         registeredCommands.clear();
     }
 
     public Set<String> getCommandKeys() {
         return Objects.requireNonNull(getConfig().getConfigurationSection("commands")).getKeys(false);
     }
+
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+
+        econ = rsp.getProvider();
+
+        return true;
+
+
+
+
+    }
+
 
 
 }

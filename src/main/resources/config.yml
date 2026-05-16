@@ -25,6 +25,12 @@ commands:
     args:
       'Arg1':
         type: PLAYER
+    conditions:
+      '1':
+        variable: {balance}
+        min: 100
+        max: 1000
+        message: "<red>You must have between $100 and $1000!"
 
 # DO NOT TOUCH
 version: 1

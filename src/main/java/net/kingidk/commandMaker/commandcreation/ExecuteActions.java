@@ -7,10 +7,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class ExecuteCommands {
+public class ExecuteActions {
     private final CommandMaker plugin;
 
-    public ExecuteCommands(CommandMaker plugin) {
+    public ExecuteActions(CommandMaker plugin) {
         this.plugin = plugin;
     }
 
