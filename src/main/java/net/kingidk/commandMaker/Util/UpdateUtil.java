@@ -1,6 +1,7 @@
-package net.kingidk.commandMaker;
+package net.kingidk.commandMaker.Util;
 
 import com.google.gson.JsonParser;
+import net.kingidk.commandMaker.CommandMaker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -15,7 +16,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 
-public class UpdateNotifier implements Listener {
+public class UpdateUtil implements Listener {
 
     private static final String MODRINTH_URL = "https://api.modrinth.com/v2/project/commandmaker/version";
     private static final String MODRINTH_PAGE = "https://modrinth.com/plugin/commandmaker/versions";
@@ -23,7 +24,7 @@ public class UpdateNotifier implements Listener {
     private final CommandMaker plugin;
     private String latestVersion = null;
 
-    public UpdateNotifier(CommandMaker plugin) {
+    public UpdateUtil(CommandMaker plugin) {
         this.plugin = plugin;
     }
 

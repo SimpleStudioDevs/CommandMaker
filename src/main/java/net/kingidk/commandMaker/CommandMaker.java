@@ -1,5 +1,6 @@
 package net.kingidk.commandMaker;
 
+import net.kingidk.commandMaker.Util.UpdateUtil;
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
 import net.kingidk.commandMaker.commandcreation.CustomCommand;
 import net.kingidk.commandMaker.commands.AdminCommand;
@@ -32,7 +33,7 @@ public final class CommandMaker extends JavaPlugin {
         new Metrics(this, PLUGINID);
 
         // Update Notifier
-        UpdateNotifier updateNotifier = new UpdateNotifier(this);
+        UpdateUtil updateNotifier = new UpdateUtil(this);
         updateNotifier.checkUpdate();
         getServer().getPluginManager().registerEvents(updateNotifier, this);
 
