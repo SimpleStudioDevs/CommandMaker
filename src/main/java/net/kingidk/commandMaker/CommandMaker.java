@@ -75,8 +75,24 @@ public final class CommandMaker extends JavaPlugin {
             // Define command information and details
 
             List<String> aliases = getConfig().getStringList("commands." + cmdName + ".aliases");
-            List<String> actions = getConfig().getStringList("commands." + cmdName + ".actions");
             String permission = getConfig().getString("commands." + cmdName + ".permission");
+            List<String> actions = getConfig().getStringList("commands." + cmdName + ".actions");
+
+            for (String action : actions) {
+                if (!action.contains(":")) {
+                    getLogger().warning("Incorrectly formatted action! Failed to parse: " + action + "This action will be disabled");
+                    actions.remove(action);
+                }
+
+                int colonIndex = action.indexOf(":");
+                String prefix = action.substring(0, colonIndex + 1);
+                List<String> prefixOptions = List.of("BROADCAST", "MESSAGE", "PLAYER", "CONSOLE");
+                if (!prefixOptions.contains(prefix)) {
+                    getLogger().warning("Incorrectly formatted action! Failed to parse: " + action + "This action will be disabled");
+                    actions.remove(action);
+                }
+
+            }
 
             ConfigurationSection argsSection = getConfig().getConfigurationSection("commands." + cmdName + ".args");
             List<ArgsDefinition> argDefs = new ArrayList<>();

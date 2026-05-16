@@ -48,10 +48,6 @@ public class CustomCommand extends Command {
         }
 
         for (String string : actions) {
-            if (!string.contains(":")) {
-                plugin.getLogger().warning("Incorrectly formatted action! Failed to parse: " + string);
-                return true;
-            }
             int colonIndex = string.indexOf(":");
             String prefix = string.substring(0, colonIndex + 1);
             String action = string.substring(colonIndex + 1).trim();
