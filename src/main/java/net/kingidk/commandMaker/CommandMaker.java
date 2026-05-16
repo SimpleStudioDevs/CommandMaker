@@ -79,21 +79,19 @@ public final class CommandMaker extends JavaPlugin {
             String permission = getConfig().getString("commands." + cmdName + ".permission");
             List<String> actions = getConfig().getStringList("commands." + cmdName + ".actions");
 
-            for (String action : actions) {
+            List<String> prefixOptions = List.of("BROADCAST:", "MESSAGE:", "PLAYER:", "CONSOLE:", "SOUND:", "SOUNDALL:");
+            actions.removeIf(action -> {
                 if (!action.contains(":")) {
-                    getLogger().warning("Incorrectly formatted action! Failed to parse: " + action + "This action will be disabled");
-                    actions.remove(action);
+                    getLogger().warning("Incorrectly formatted action! Failed to parse: " + action + " This action will be disabled");
+                    return true;
                 }
-
-                int colonIndex = action.indexOf(":");
-                String prefix = action.substring(0, colonIndex + 1);
-                List<String> prefixOptions = List.of("BROADCAST", "MESSAGE", "PLAYER", "CONSOLE");
+                String prefix = action.substring(0, action.indexOf(":") + 1);
                 if (!prefixOptions.contains(prefix)) {
-                    getLogger().warning("Incorrectly formatted action! Failed to parse: " + action + "This action will be disabled");
-                    actions.remove(action);
+                    getLogger().warning("Incorrectly formatted action! Failed to parse: " + action + " This action will be disabled");
+                    return true;
                 }
-
-            }
+                return false;
+            });
 
             ConfigurationSection argsSection = getConfig().getConfigurationSection("commands." + cmdName + ".args");
             List<ArgsDefinition> argDefs = new ArrayList<>();

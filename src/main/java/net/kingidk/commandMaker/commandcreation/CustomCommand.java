@@ -131,6 +131,8 @@ public class CustomCommand extends Command {
                 case "BROADCAST:" -> executeCommands.sendMessage(sender, action, true);
                 case "CONSOLE:" -> executeCommands.runCommand(sender, action, true);
                 case "PLAYER:" -> executeCommands.runCommand(sender, action, false);
+                case "SOUND:" -> executeCommands.playSound(sender, action, false);
+                case "SOUNDALL:" -> executeCommands.playSound(sender, action, true);
                 default -> plugin.getLogger().warning("Incorrectly formatted action! Failed to parse: " + string);
             }
         }

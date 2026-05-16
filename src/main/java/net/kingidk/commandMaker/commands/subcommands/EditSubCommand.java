@@ -86,9 +86,9 @@ public class EditSubCommand {
 
         if (args[3].equalsIgnoreCase("add")) {
 
-            Set<String> availableActions = Set.of("message", "console", "player", "broadcast");
+            Set<String> availableActions = Set.of("message", "console", "player", "broadcast", "sound", "soundall");
             if (!availableActions.contains(args[4].toLowerCase())) {
-                sender.sendMessage(Component.text("Invalid action type! Options: player, console, player, broadcast", NamedTextColor.RED));
+                sender.sendMessage(Component.text("Invalid action type! Options: player, console, player, broadcast, sound, soundall", NamedTextColor.RED));
                 return;
             }
 
@@ -99,6 +99,8 @@ public class EditSubCommand {
                 case "broadcast" -> "BROADCAST:";
                 case "console" -> "CONSOLE:";
                 case "player" -> "PLAYER:";
+                case "sound" -> "SOUND:";
+                case "soundall" -> "SOUNDALL:";
                 default -> null;
             };
 
@@ -269,7 +271,7 @@ public class EditSubCommand {
                 return filter(args[3], List.of("add", "list", "remove"));
             }
             if (args[3].equalsIgnoreCase("add")) {
-                if (args.length == 5) return filter(args[4], List.of("console", "player", "message", "broadcast"));
+                if (args.length == 5) return filter(args[4], List.of("console", "player", "message", "broadcast", "sound", "soundall"));
                 if (args.length == 6) return List.of("<action>");
             }
             if (args[3].equalsIgnoreCase("remove")) {
