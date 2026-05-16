@@ -4,9 +4,12 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import net.kingidk.commandMaker.CommandMaker;
 import net.kingidk.commandMaker.arguments.ArgVerification;
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
+import net.kingidk.commandMaker.conditions.ConditionsDefinition;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -22,8 +25,9 @@ public class CustomCommand extends Command {
     private final String permission;
     private final List<ArgsDefinition> argDefs;
     private final ExecuteActions executeCommands;
+    private final List<ConditionsDefinition> conditionDefs;
 
-    public CustomCommand(String name, List<String> aliases, List<String> actions, CommandMaker plugin, String permission, List<ArgsDefinition> argDefs) {
+    public CustomCommand(String name, List<String> aliases, List<String> actions, CommandMaker plugin, String permission, List<ArgsDefinition> argDefs, List<ConditionsDefinition> conditionDefs) {
         super(name);
         this.plugin = plugin;
         setAliases(aliases);
@@ -31,6 +35,7 @@ public class CustomCommand extends Command {
         this.permission = permission;
         this.argDefs = argDefs;
         this.executeCommands = new ExecuteActions(plugin);
+        this.conditionDefs = conditionDefs;
     }
 
     @Override
@@ -46,6 +51,47 @@ public class CustomCommand extends Command {
             sender.sendMessage(Component.text("Not enough arguments!", NamedTextColor.RED));
             return true;
         }
+
+        // Conditions Check
+        for (ConditionsDefinition condition : conditionDefs) {
+            String variable = condition.variable();
+            Player player = (Player) sender;
+            if (variable.startsWith("%")) {
+                PlaceholderAPI.setPlaceholders(player, variable);
+            } else if (variable.startsWith("{")) {
+                double finalVariable = 0;
+
+                if (variable.contains("{balance}")) {
+                    if (CommandMaker.econ == null) {
+                        plugin.getLogger().warning("Tried to use {balance} with no vault economy!");
+                        sender.sendMessage(Component.text("An error occured. Please report this to an administrator", NamedTextColor.RED));
+                        return true;
+                    } else {
+                        finalVariable = CommandMaker.econ.getBalance(player);
+                    }
+                } else {
+                    finalVariable = switch (variable.toLowerCase()) {
+                        case "{x}" -> player.getX();
+                        case "{y}" -> player.getY();
+                        case "{z}" -> player.getZ();
+                        default -> throw new IllegalStateException("Unexpected value: " + variable.toLowerCase());
+                    };
+                }
+
+
+
+                if (finalVariable < condition.min()
+                || finalVariable > condition.max()) {
+                    sender.sendMessage(MiniMessage.miniMessage().deserialize(condition.message()));
+                    return true;
+                }
+
+
+            }
+
+        }
+
+
 
         for (String string : actions) {
             if (!string.contains(":")) {

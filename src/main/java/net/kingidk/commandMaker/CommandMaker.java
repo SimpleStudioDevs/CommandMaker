@@ -3,11 +3,14 @@ package net.kingidk.commandMaker;
 import net.kingidk.commandMaker.arguments.ArgsDefinition;
 import net.kingidk.commandMaker.commandcreation.CustomCommand;
 import net.kingidk.commandMaker.commands.AdminCommand;
+import net.kingidk.commandMaker.conditions.ConditionsDefinition;
+import net.milkbowl.vault.economy.Economy;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
@@ -15,7 +18,8 @@ import java.util.*;
 public final class CommandMaker extends JavaPlugin {
     private final List<CustomCommand> registeredCommands = new ArrayList<>();
     public boolean papi;
-    public static CommandMaker instance;
+    public boolean vault;
+    public static Economy econ = null;
 
 
     @Override
@@ -26,7 +30,6 @@ public final class CommandMaker extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        instance = this;
         // BStats
         final int PLUGINID = 31020;
         new Metrics(this, PLUGINID);
@@ -50,6 +53,13 @@ public final class CommandMaker extends JavaPlugin {
             getLogger().info("PlaceholderAPI not detected, PAPI-based placeholders will be in plain-text!");
             papi = false;
         } else papi = true;
+
+        var vaultPlugin = Bukkit.getPluginManager().getPlugin("Vault");
+
+        if (vaultPlugin == null) {
+            getLogger().info("Vault not detected, {balance} placeholder will be unavailable");
+            vault = false;
+        } else vault = true;
 
         Objects.requireNonNull(getCommand("commandmaker")).setExecutor(new AdminCommand(this));
         Objects.requireNonNull(getCommand("commandmaker")).setTabCompleter(new AdminCommand(this) {});
@@ -90,8 +100,21 @@ public final class CommandMaker extends JavaPlugin {
                 }
             }
 
+            ConfigurationSection conditionsSection = getConfig().getConfigurationSection("commands." + cmdName + ".conditions");
+            List<ConditionsDefinition> conditionDefs = new ArrayList<>();
+            if (conditionsSection != null) {
+                for (String conditionName : conditionsSection.getKeys(false)) {
+                    String variable =  conditionsSection.getString(conditionName + ".variable");
+                    double min = conditionsSection.getDouble(conditionName + ".min");
+                    double max = conditionsSection.getDouble(conditionName + ".max");
+                    String message = conditionsSection.getString(conditionName + ".message");
+                    conditionDefs.add(new ConditionsDefinition(variable, min, max, message));
+                }
+            }
+
+
             // Register built command to the server
-            CustomCommand cmd = new CustomCommand(cmdName, aliases, actions, this, permission, argDefs);
+            CustomCommand cmd = new CustomCommand(cmdName, aliases, actions, this, permission, argDefs, conditionDefs);
             commandMap.register(getName(), cmd);
 
             // Force custom commands to take highest priority — overwrite any conflicting registration under the bare name
@@ -123,6 +146,26 @@ public final class CommandMaker extends JavaPlugin {
 
     public Set<String> getCommandKeys() {
         return Objects.requireNonNull(getConfig().getConfigurationSection("commands")).getKeys(false);
+    }
+
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+
+        econ = rsp.getProvider();
+
+        return true;
+
+
+
+
     }
 
 
