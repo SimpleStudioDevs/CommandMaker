@@ -4,6 +4,7 @@ import net.kingidk.commandMaker.CommandMaker;
 import net.kingidk.commandMaker.arguments.ArgVerification;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Registry;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 
@@ -272,7 +273,13 @@ public class EditSubCommand {
             }
             if (args[3].equalsIgnoreCase("add")) {
                 if (args.length == 5) return filter(args[4], List.of("console", "player", "message", "broadcast", "sound", "soundall"));
-                if (args.length == 6) return List.of("<action>");
+                if (args.length == 6) {
+                    if (args[4].equalsIgnoreCase("sound") || args[4].equalsIgnoreCase("soundall")) {
+                        return filter(args[5], Registry.SOUNDS.stream().map(s -> s.getKey().toString()).toList());
+                    } else {
+                        return List.of("<action>");
+                    }
+                }
             }
             if (args[3].equalsIgnoreCase("remove")) {
                 if (args.length == 5) return List.of("<actionID>");
